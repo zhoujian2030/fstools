@@ -21,6 +21,5 @@ elif [[ $COMMAND = "install" ]]; then
     make install
 else
     make
+    cp kpi/obj/kpi /mnt/hgfs/c/share/
 fi
-
-cp kpi/obj/kpi /mnt/hgfs/c/share/

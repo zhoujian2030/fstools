@@ -5,7 +5,11 @@
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
 #define MAC_RECV_MSG_BUFFER_LENGTH 2048
 
+#define KPI_SERVER_IP "192.168.1.166"
+#define KPI_SERVER_PORT 50001
+
 typedef unsigned int UInt32;
+typedef signed int SInt32;
 typedef unsigned short UInt16;
 typedef unsigned char UInt8;
 
@@ -25,6 +29,8 @@ typedef enum {
 	MAC_KPI_REQ = 0x01
 } KPIReqAPI;
 
+#define COLLECT_PERIOD_MS 1000
+
 #define LTE_MSG_HEAD_LENGTH 10
 #define MAC_VAR_SIZE(x) 1
 typedef struct {
@@ -42,8 +48,8 @@ typedef struct {
     UInt32 rar;
     UInt32 msg3;
     UInt32 contResol;
-    UInt32 msg3Expired;
     UInt32 crcValid;
+    UInt32 msg3Expired;
     UInt32 crcError;
     
 	UInt32 rrcReq;

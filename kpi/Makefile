@@ -9,7 +9,7 @@ BINDIR = bin
 # Libraries
 
 INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/net/include
-LIBS = $(PROJBASE)/cm/lib/libnetcp.a $(PROJBASE)/cm/lib/libcm.a $(PROJBASE)/net/lib/libnet.a
+LIBS = $(PROJBASE)/cm/lib/libnetcp.a $(PROJBASE)/net/lib/libnet.a $(PROJBASE)/cm/lib/libcm.a 
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)

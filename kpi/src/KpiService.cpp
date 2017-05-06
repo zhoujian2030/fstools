@@ -42,7 +42,7 @@ unsigned long KpiService::run() {
 
     while (true) {
         sendMacKpiReq();
-        Thread::sleep(1000);
+        Thread::sleep(COLLECT_PERIOD_MS);
     }
 
     m_stopEvent.wait();

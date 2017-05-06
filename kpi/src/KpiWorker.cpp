@@ -7,9 +7,11 @@
 
 #include "KpiWorker.h"
 #include "CLogger.h"
+#include <iostream>
 
 using namespace cm;
 using namespace kpi;
+using namespace net;
 
 // ----------------------------------------
 KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
@@ -17,6 +19,17 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 {
     // CMLogger::initConsoleLog();
     m_macQmss = qmss;
+    m_udpSocket = new UdpSocket();
+    m_kpiServerAddress.port = KPI_SERVER_PORT;
+    Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, KPI_SERVER_IP, KPI_SERVER_PORT);
+
+    m_numKpiCounter = sizeof(LteCounter) / sizeof(UInt32);
+    m_prevKpiArray = new UInt32[m_numKpiCounter];
+    m_deltaKpiArray = new SInt32[m_numKpiCounter];
+    memset((void*)m_prevKpiArray, 0, sizeof(LteCounter));
+    memset((void*)m_deltaKpiArray, 0, sizeof(LteCounter));
+
+    m_index = 0;
 }
 
 // ----------------------------------------
@@ -27,14 +40,45 @@ KpiWorker::~KpiWorker() {
 // ----------------------------------------
 unsigned long KpiWorker::run() {
     LOG_DBG(KPI_LOGGER_NAME, "[%s], KpiWorker running\n", __func__);
+    
+    std::string kpiCounterName;
+    kpiCounterName.append("NO.; ");
+    kpiCounterName.append("ActiveUe, ActiveUe delt; ");
+    kpiCounterName.append("RACH, RACH delt; ");
+    kpiCounterName.append("RAR, RAR delt; ");
+    kpiCounterName.append("MSG3, MSG3 delt; ");
+    kpiCounterName.append("ContResl, ContResl delt; ");
+    kpiCounterName.append("CrcValid, CrcValid delt; ");
+    kpiCounterName.append("MSG3Exp, MSG3Exp delt; ");
+    kpiCounterName.append("CrcError, CrcError delt; ");
+    kpiCounterName.append("RRCReq, RRCReq delt; ");
+    kpiCounterName.append("RRCSetup, RRCSetup delt; ");
+    kpiCounterName.append("RRCCompl, RRCCompl delt; ");
+    kpiCounterName.append("IDReq, IDReq delt; ");
+    kpiCounterName.append("IDResp, IDResp delt; ");
+    kpiCounterName.append("AttRej, AttRej delt; ");
+    kpiCounterName.append("TAURej, TAURej delt; ");
+    kpiCounterName.append("RRCRel, RRCRel delt; ");
+    kpiCounterName.append("RRCRej, RRCRej delt; ");
+    kpiCounterName.append("ReestReq, ReestReq delt; ");
+    kpiCounterName.append("ReestRej, ReestRej delt; ");
+    kpiCounterName.append("UEInfReq, UEInfReq delt; ");
+    kpiCounterName.append("UEInfRsp, UEInfRsp delt; ");
+    kpiCounterName.append("ULCCCH, ULCCCH delt; ");
+    kpiCounterName.append("DLCCCH, DLCCCH delt; ");
+    kpiCounterName.append("ULDCCH, ULDCCH delt; ");
+    kpiCounterName.append("DLDCCH, DLDCCH delt; ");
+    kpiCounterName.append("\n");
 
-    int length = 0;
+    m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress);    
+
+    UInt32 length = 0;
     while (true) {
         if ((length = m_macQmss->recv(m_recvBuffer)) > 0) {
             handleMacKpiResponse(length);
         } else {
             LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv MAC msg length = %d\n", __func__, length);
-            Thread::sleep(1000);
+            Thread::sleep(COLLECT_PERIOD_MS);
         }
     }
 
@@ -43,12 +87,41 @@ unsigned long KpiWorker::run() {
 }
 
 // ----------------------------------------
-void KpiWorker::handleMacKpiResponse(unsigned short length) {
+void KpiWorker::handleMacKpiResponse(UInt32 length) {
     LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv MAC KPI response length = %d\n", __func__, length);
-    LOG_BUFFER(m_recvBuffer, length);
 
-    LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
-    displayCounter(lteCounter);
+    char kpiChar[1500];
+    int totalLen = 0;
+    int singleLen = 0;
+
+    UInt32* kpiValArray = (UInt32*)m_recvBuffer;
+    UInt32 numKpi = length / sizeof(UInt32);
+    if (numKpi == m_numKpiCounter) {
+        m_index++;
+        singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
+        totalLen += singleLen;
+
+        for (int i=0; i<m_numKpiCounter; i++) {
+            m_deltaKpiArray[i] = kpiValArray[i] - m_prevKpiArray[i];
+            m_prevKpiArray[i] = kpiValArray[i];
+
+            singleLen = sprintf(kpiChar + totalLen, "%8d, %4d; ", kpiValArray[i], m_deltaKpiArray[i]);
+            totalLen += singleLen;
+            if ((totalLen + 30) > sizeof(kpiChar)) {
+                break;
+            }
+        }
+        singleLen = sprintf(kpiChar + totalLen, "\n");
+        totalLen += singleLen;
+
+        // send to kpi receiver
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
+        //std::cout << kpiChar << std::endl;
+        m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);    
+        
+        //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
+        //displayCounter(lteCounter);
+    }
 }
 
 void KpiWorker::displayCounter(LteCounter* lteCounter) {
