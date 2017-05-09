@@ -49,8 +49,11 @@ unsigned long KpiWorker::run() {
     kpiCounterName.append("MSG3, MSG3 delt; ");
     kpiCounterName.append("ContResl, ContResl delt; ");
     kpiCounterName.append("CrcValid, CrcValid delt; ");
+    kpiCounterName.append("HarqAck, HarqAck delt; ");
     kpiCounterName.append("MSG3Exp, MSG3Exp delt; ");
     kpiCounterName.append("CrcError, CrcError delt; ");
+    kpiCounterName.append("HarqNAck, HarqNAck delt; ");
+    kpiCounterName.append("ContNack, ContNack delt; ");
     kpiCounterName.append("RRCReq, RRCReq delt; ");
     kpiCounterName.append("RRCSetup, RRCSetup delt; ");
     kpiCounterName.append("RRCCompl, RRCCompl delt; ");
@@ -121,13 +124,15 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         
         //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
         //displayCounter(lteCounter);
+    } else {
+        LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid mac kpi response\n", __func__);
     }
 }
 
 void KpiWorker::displayCounter(LteCounter* lteCounter) {
     char rrcCounterName[] = "|RRCReq   |RRCSetup |RRCCompl |IDReq    |IDResp   |AttRej   |TAURej   |RRCRel   |RRCRej   |ReestReq |ReestRej |UEInfReq |UEInfRsp |";
     char l2CounterName[] = "|ULCCCH   |DLCCCH   |ULDCCH   |DLDCCH   |";
-    char macCounterName[] = "|ActiveUe |RACH     |RAR      |MSG3     |ContResl |MSG3Exp  |CrcValid |CrcError |";
+    char macCounterName[] = "|ActiveUe |RACH     |RAR      |MSG3     |ContResl |CrcValid |harqAck  |MSG3Exp  |CrcError |harqNack |contNack |";
     char rrcCounterVal[512];
     char l2CounterVal[128];
     char macCounterVal[512];
@@ -143,10 +148,11 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
         "+---------+---------+---------+---------+",
         lteCounter->ulCCCH, lteCounter->dlCCCH, lteCounter->ulDCCH, lteCounter->dlDCCH);
 
-    sprintf(macCounterVal, "%s\n|%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |", 
-        "+---------+---------+---------+---------+---------+---------+---------+---------+",
+    sprintf(macCounterVal, "%s\n|%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |", 
+        "+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+",
         lteCounter->activeUe, lteCounter->rach, lteCounter->rar, lteCounter->msg3,
-        lteCounter->contResol, lteCounter->msg3Expired, lteCounter->crcValid, lteCounter->crcError);    
+        lteCounter->contResol, lteCounter->crcValid, lteCounter->harqAck, lteCounter->msg3Expired, 
+        lteCounter->crcError, lteCounter->harqNack, lteCounter->contNack);
 
     printf("%s\n%s\n\n%s\n%s\n\n", rrcCounterName, rrcCounterVal, l2CounterName, l2CounterVal);
     printf("%s\n%s\n\n", macCounterName, macCounterVal);

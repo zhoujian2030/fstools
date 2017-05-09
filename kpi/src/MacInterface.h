@@ -49,8 +49,11 @@ typedef struct {
     UInt32 msg3;
     UInt32 contResol;
     UInt32 crcValid;
+    UInt32 harqAck;
     UInt32 msg3Expired;
     UInt32 crcError;
+    UInt32 harqNack;  // harq nack for all dl sch including contention resolution
+    UInt32 contNack;  // harq nack for contention resolution
     
 	UInt32 rrcReq;
 	UInt32 rrcSetup;
