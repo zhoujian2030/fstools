@@ -62,8 +62,8 @@ unsigned long KpiWorker::run() {
     kpiCounterName.append("AttRej, AttRej delt; ");
     kpiCounterName.append("TAURej, TAURej delt; ");
     kpiCounterName.append("RRCRel, RRCRel delt; ");
-    kpiCounterName.append("RRCRej, RRCRej delt; ");
     kpiCounterName.append("ReestReq, ReestReq delt; ");
+    kpiCounterName.append("RRCRej, RRCRej delt; ");
     kpiCounterName.append("ReestRej, ReestRej delt; ");
     kpiCounterName.append("UEInfReq, UEInfReq delt; ");
     kpiCounterName.append("UEInfRsp, UEInfRsp delt; ");

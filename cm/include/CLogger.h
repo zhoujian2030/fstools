@@ -19,7 +19,7 @@
 #define FUNCNAME __FUNCTION__
 #define LINE     __LINE__
 
-extern UInt8 gLogLevel;
+extern unsigned char gLogLevel;
 
 #define LOG_TRACE(moduleId, fmt, args...){\
         if (gLogLevel == 0) {\

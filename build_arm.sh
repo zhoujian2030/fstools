@@ -22,4 +22,5 @@ elif [[ $COMMAND = "install" ]]; then
 else
     make
     cp kpi/obj/kpi /mnt/hgfs/c/share/
+    cp tst/obj/tst /mnt/hgfs/c/share/
 fi

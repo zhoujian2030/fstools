@@ -1,5 +1,5 @@
 # Target  name
-TARGET = kpi
+TARGET = tst
 
 # Directories
 OBJDIR = obj
@@ -8,8 +8,8 @@ DEPDIR = dep
 BINDIR = bin
 # Libraries
 
-INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/net/include -I$(PROJBASE)/qmss/inc
-LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/net/lib/libnet.a $(PROJBASE)/cm/lib/libcm.a 
+INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/qmss/inc
+LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/cm/lib/libcm.a 
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)

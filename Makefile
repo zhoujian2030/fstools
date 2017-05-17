@@ -1,4 +1,6 @@
-SUBDIRS = kpi
+SUBDIRS = qmss \
+	kpi \
+	tst
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

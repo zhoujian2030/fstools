@@ -29,7 +29,7 @@ typedef enum {
 	MAC_KPI_REQ = 0x01
 } KPIReqAPI;
 
-#define COLLECT_PERIOD_MS 1000
+#define COLLECT_PERIOD_MS 10000
 
 #define LTE_MSG_HEAD_LENGTH 10
 #define MAC_VAR_SIZE(x) 1
