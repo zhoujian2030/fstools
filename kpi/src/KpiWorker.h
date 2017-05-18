@@ -38,6 +38,9 @@ namespace kpi {
 
         net::UdpSocket* m_udpSocket;
         net::Socket::InetAddressPort m_kpiServerAddress;
+        UInt32 m_period;
+
+        bool m_sendToServerFlag;
     };
 }
 

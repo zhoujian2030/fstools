@@ -8,10 +8,13 @@
 #include "KpiWorker.h"
 #include "CLogger.h"
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace cm;
 using namespace kpi;
 using namespace net;
+using namespace std;
 
 // ----------------------------------------
 KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
@@ -20,8 +23,9 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
     // CMLogger::initConsoleLog();
     m_macQmss = qmss;
     m_udpSocket = new UdpSocket();
-    m_kpiServerAddress.port = KPI_SERVER_PORT;
-    Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, KPI_SERVER_IP, KPI_SERVER_PORT);
+    m_kpiServerAddress.port = gServerPort;
+    Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, gServerIp, gServerPort);
+    m_period = gPeriod;
 
     m_numKpiCounter = sizeof(LteCounter) / sizeof(UInt32);
     m_prevKpiArray = new UInt32[m_numKpiCounter];
@@ -30,6 +34,8 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
     memset((void*)m_deltaKpiArray, 0, sizeof(LteCounter));
 
     m_index = 0;
+
+    m_sendToServerFlag = false;
 }
 
 // ----------------------------------------
@@ -73,7 +79,11 @@ unsigned long KpiWorker::run() {
     kpiCounterName.append("DLDCCH, DLDCCH delt; ");
     kpiCounterName.append("\n");
 
-    m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress);    
+    if (-1 == m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress)) {
+        m_sendToServerFlag = false;
+    } else {
+        m_sendToServerFlag = true;
+    }
 
     UInt32 length = 0;
     while (true) {
@@ -81,7 +91,7 @@ unsigned long KpiWorker::run() {
             handleMacKpiResponse(length);
         } else {
             LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv MAC msg length = %d\n", __func__, length);
-            Thread::sleep(COLLECT_PERIOD_MS);
+            Thread::sleep(m_period);
         }
     }
 
@@ -122,14 +132,15 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         //std::cout << kpiChar << std::endl;
         m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);    
         
-        //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
-        //displayCounter(lteCounter);
+        LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
+        displayCounter(lteCounter);
     } else {
         LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid mac kpi response\n", __func__);
     }
 }
 
 void KpiWorker::displayCounter(LteCounter* lteCounter) {
+#if 0
     char rrcCounterName[] = "|RRCReq   |RRCSetup |RRCCompl |IDReq    |IDResp   |AttRej   |TAURej   |RRCRel   |RRCRej   |ReestReq |ReestRej |UEInfReq |UEInfRsp |";
     char l2CounterName[] = "|ULCCCH   |DLCCCH   |ULDCCH   |DLDCCH   |";
     char macCounterName[] = "|ActiveUe |RACH     |RAR      |MSG3     |ContResl |CrcValid |harqAck  |MSG3Exp  |CrcError |harqNack |contNack |";
@@ -156,4 +167,62 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
 
     printf("%s\n%s\n\n%s\n%s\n\n", rrcCounterName, rrcCounterVal, l2CounterName, l2CounterVal);
     printf("%s\n%s\n\n", macCounterName, macCounterVal);
+#else
+    system("clear");
+
+    time_t timep;   
+    struct tm *p; 
+  
+    time(&timep);   
+    p = localtime(&timep);
+
+    LteCounter* accumulateCounter = (LteCounter*)m_prevKpiArray;
+    LteCounter* deltaCounter = (LteCounter*)m_deltaKpiArray;
+    char dispChar[2048];
+    int sumLength = 0;
+    int varLength = 0;
+    // memset((void*)dispChar, 32, 1000);
+
+    printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+    printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+    printf("Name            Accumulate  Delta(%ds)\n", m_period/1000);
+    printf("--------------------------------------\n");
+
+    varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "MSG3            %10d  %8d\n", accumulateCounter->msg3, deltaCounter->msg3);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "MSG3 Expired    %10d  %8d\n", accumulateCounter->msg3Expired, deltaCounter->msg3Expired);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "CRC Correct     %10d  %8d\n", accumulateCounter->crcValid, deltaCounter->crcValid);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "CRC Error       %10d  %8d\n", accumulateCounter->crcError, deltaCounter->crcError);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ ACK        %10d  %8d\n", accumulateCounter->harqAck, deltaCounter->harqAck);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ NACK       %10d  %8d\n", accumulateCounter->harqNack, deltaCounter->harqNack);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RRC Setup       %10d  %8d\n", accumulateCounter->rrcSetup, deltaCounter->rrcSetup);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RRC Reject      %10d  %8d\n", accumulateCounter->rrcConnReject, deltaCounter->rrcConnReject);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RRC Setup Compl %10d  %8d\n", accumulateCounter->rrcSetupComplete, deltaCounter->rrcSetupComplete);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Identity Req    %10d  %8d\n", accumulateCounter->identityReq, deltaCounter->identityReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Identity Resp   %10d  %8d\n", accumulateCounter->idnetityResp, deltaCounter->idnetityResp);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "TAU Reject      %10d  %8d\n", accumulateCounter->tauReject, deltaCounter->tauReject);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Attach Reject   %10d  %8d\n", accumulateCounter->attachReject, deltaCounter->attachReject);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
+    sumLength += varLength;
+
+    printf("%s", dispChar);
+#endif
 }

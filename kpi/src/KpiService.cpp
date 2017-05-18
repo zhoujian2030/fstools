@@ -25,6 +25,7 @@ KpiService::KpiService(std::string serviceName)
 {
     init();
     m_transactionId = 0;
+    m_period = gPeriod;
 }
 
 // ------------------------------------------------
@@ -42,7 +43,7 @@ unsigned long KpiService::run() {
 
     while (true) {
         sendMacKpiReq();
-        Thread::sleep(COLLECT_PERIOD_MS);
+        Thread::sleep(m_period);
     }
 
     m_stopEvent.wait();

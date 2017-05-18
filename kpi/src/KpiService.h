@@ -34,8 +34,8 @@ namespace kpi {
         char m_sendBuffer[MAC_SEND_MSG_BUFFER_LENGTH];
         unsigned int m_transactionId;
 
-        net::UdpSocket* m_udpServerSocket;
-        net::SelectSocketSet* m_selectSocketSet;
+        UInt32 m_period;
+
         cm::EventIndicator m_stopEvent;
     };
 

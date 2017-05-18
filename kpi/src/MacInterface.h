@@ -2,11 +2,14 @@
 #ifndef MAC_INTERFACE_H
 #define MAC_INTERFACE_H
 
+#include <string>
+
+extern std::string gServerIp;
+extern unsigned short gServerPort;
+extern int gPeriod;
+
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
 #define MAC_RECV_MSG_BUFFER_LENGTH 2048
-
-#define KPI_SERVER_IP "192.168.1.166"
-#define KPI_SERVER_PORT 50001
 
 typedef unsigned int UInt32;
 typedef signed int SInt32;
@@ -28,8 +31,6 @@ typedef unsigned char UInt8;
 typedef enum {
 	MAC_KPI_REQ = 0x01
 } KPIReqAPI;
-
-#define COLLECT_PERIOD_MS 10000
 
 #define LTE_MSG_HEAD_LENGTH 10
 #define MAC_VAR_SIZE(x) 1
