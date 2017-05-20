@@ -22,10 +22,35 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 {
     // CMLogger::initConsoleLog();
     m_macQmss = qmss;
-    m_udpSocket = new UdpSocket();
-    m_kpiServerAddress.port = gServerPort;
-    Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, gServerIp, gServerPort);
+    m_writeOption = gWriteOption;
     m_period = gPeriod;
+
+    m_udpSocket = 0;
+    m_file = 0;
+
+    if (m_writeOption == 2) {
+        m_udpSocket = new UdpSocket();
+        m_kpiServerAddress.port = gServerPort;
+        Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, gServerIp, gServerPort);
+    }
+
+    if (m_writeOption == 1) {
+        // char currPath[256];
+        // getcwd(currPath, 256);
+        // LOG_DBG(KPI_LOGGER_NAME, "[%s], Current path: %s\n", __func__, currPath);
+        m_filename.append("/mnt/user2/lte_kpi_");
+        time_t timep;   
+        struct tm *p;     
+        time(&timep);   
+        p = localtime(&timep);
+        char dateStr[32];
+        sprintf(dateStr, "%04d-%02d-%02d_%02d-%02d-%02d", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+        m_filename.append(dateStr);
+        m_filename.append(".txt");
+
+        m_file = new File(m_filename, FILE_CREATE, FILE_WRITE_ONLY);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_filename.c_str());
+    }
 
     m_numKpiCounter = sizeof(LteCounter) / sizeof(UInt32);
     m_prevKpiArray = new UInt32[m_numKpiCounter];
@@ -40,49 +65,64 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 
 // ----------------------------------------
 KpiWorker::~KpiWorker() {
+    if (m_writeOption == 2) {
+        delete m_udpSocket;
+    }
 
+    if (m_writeOption == 1) {
+        delete m_file;
+    }
 }
 
 // ----------------------------------------
 unsigned long KpiWorker::run() {
     LOG_DBG(KPI_LOGGER_NAME, "[%s], KpiWorker running\n", __func__);
     
-    std::string kpiCounterName;
-    kpiCounterName.append("NO.; ");
-    kpiCounterName.append("ActiveUe, ActiveUe delt; ");
-    kpiCounterName.append("RACH, RACH delt; ");
-    kpiCounterName.append("RAR, RAR delt; ");
-    kpiCounterName.append("MSG3, MSG3 delt; ");
-    kpiCounterName.append("ContResl, ContResl delt; ");
-    kpiCounterName.append("CrcValid, CrcValid delt; ");
-    kpiCounterName.append("HarqAck, HarqAck delt; ");
-    kpiCounterName.append("MSG3Exp, MSG3Exp delt; ");
-    kpiCounterName.append("CrcError, CrcError delt; ");
-    kpiCounterName.append("HarqNAck, HarqNAck delt; ");
-    kpiCounterName.append("ContNack, ContNack delt; ");
-    kpiCounterName.append("RRCReq, RRCReq delt; ");
-    kpiCounterName.append("RRCSetup, RRCSetup delt; ");
-    kpiCounterName.append("RRCCompl, RRCCompl delt; ");
-    kpiCounterName.append("IDReq, IDReq delt; ");
-    kpiCounterName.append("IDResp, IDResp delt; ");
-    kpiCounterName.append("AttRej, AttRej delt; ");
-    kpiCounterName.append("TAURej, TAURej delt; ");
-    kpiCounterName.append("RRCRel, RRCRel delt; ");
-    kpiCounterName.append("ReestReq, ReestReq delt; ");
-    kpiCounterName.append("RRCRej, RRCRej delt; ");
-    kpiCounterName.append("ReestRej, ReestRej delt; ");
-    kpiCounterName.append("UEInfReq, UEInfReq delt; ");
-    kpiCounterName.append("UEInfRsp, UEInfRsp delt; ");
-    kpiCounterName.append("ULCCCH, ULCCCH delt; ");
-    kpiCounterName.append("DLCCCH, DLCCCH delt; ");
-    kpiCounterName.append("ULDCCH, ULDCCH delt; ");
-    kpiCounterName.append("DLDCCH, DLDCCH delt; ");
-    kpiCounterName.append("\n");
+    if ((m_udpSocket != 0) || (m_file != 0)) {
+        std::string kpiCounterName;
+        kpiCounterName.append("NO.; ");
+        kpiCounterName.append("ActiveUe, ActiveUe delt; ");
+        kpiCounterName.append("RACH, RACH delt; ");
+        kpiCounterName.append("RAR, RAR delt; ");
+        kpiCounterName.append("MSG3, MSG3 delt; ");
+        kpiCounterName.append("ContResl, ContResl delt; ");
+        kpiCounterName.append("CrcValid, CrcValid delt; ");
+        kpiCounterName.append("HarqAck, HarqAck delt; ");
+        kpiCounterName.append("MSG3Exp, MSG3Exp delt; ");
+        kpiCounterName.append("CrcError, CrcError delt; ");
+        kpiCounterName.append("HarqNAck, HarqNAck delt; ");
+        kpiCounterName.append("ContNack, ContNack delt; ");
+        kpiCounterName.append("RRCReq, RRCReq delt; ");
+        kpiCounterName.append("RRCSetup, RRCSetup delt; ");
+        kpiCounterName.append("RRCCompl, RRCCompl delt; ");
+        kpiCounterName.append("IDReq, IDReq delt; ");
+        kpiCounterName.append("IDResp, IDResp delt; ");
+        kpiCounterName.append("AttRej, AttRej delt; ");
+        kpiCounterName.append("TAURej, TAURej delt; ");
+        kpiCounterName.append("RRCRel, RRCRel delt; ");
+        kpiCounterName.append("ReestReq, ReestReq delt; ");
+        kpiCounterName.append("RRCRej, RRCRej delt; ");
+        kpiCounterName.append("ReestRej, ReestRej delt; ");
+        kpiCounterName.append("UEInfReq, UEInfReq delt; ");
+        kpiCounterName.append("UEInfRsp, UEInfRsp delt; ");
+        kpiCounterName.append("ULCCCH, ULCCCH delt; ");
+        kpiCounterName.append("DLCCCH, DLCCCH delt; ");
+        kpiCounterName.append("ULDCCH, ULDCCH delt; ");
+        kpiCounterName.append("DLDCCH, DLDCCH delt; ");
+        kpiCounterName.append("\n");
 
-    if (-1 == m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress)) {
-        m_sendToServerFlag = false;
-    } else {
-        m_sendToServerFlag = true;
+        if (m_udpSocket) {
+            if (-1 == m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress)) {
+                m_sendToServerFlag = false;
+            } else {
+                m_sendToServerFlag = true;
+            }
+        }
+
+        if (m_file) {
+            int writeBytes = 0;
+            m_file->write(kpiCounterName.c_str(), kpiCounterName.size(), writeBytes);
+        }
     }
 
     UInt32 length = 0;
@@ -127,10 +167,16 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         singleLen = sprintf(kpiChar + totalLen, "\n");
         totalLen += singleLen;
 
-        // send to kpi receiver
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
-        //std::cout << kpiChar << std::endl;
-        m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);    
+        if (m_udpSocket) {
+            // send to kpi receiver
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
+            m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);   
+        } 
+
+        if (m_file) {
+            int writeBytes = 0;
+            m_file->write((const char*)kpiChar, totalLen, writeBytes);
+        }
         
         LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
         displayCounter(lteCounter);
@@ -140,34 +186,6 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
 }
 
 void KpiWorker::displayCounter(LteCounter* lteCounter) {
-#if 0
-    char rrcCounterName[] = "|RRCReq   |RRCSetup |RRCCompl |IDReq    |IDResp   |AttRej   |TAURej   |RRCRel   |RRCRej   |ReestReq |ReestRej |UEInfReq |UEInfRsp |";
-    char l2CounterName[] = "|ULCCCH   |DLCCCH   |ULDCCH   |DLDCCH   |";
-    char macCounterName[] = "|ActiveUe |RACH     |RAR      |MSG3     |ContResl |CrcValid |harqAck  |MSG3Exp  |CrcError |harqNack |contNack |";
-    char rrcCounterVal[512];
-    char l2CounterVal[128];
-    char macCounterVal[512];
-    
-    sprintf(rrcCounterVal, "%s\n|%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |", 
-        "+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+",
-        lteCounter->rrcReq, lteCounter->rrcSetup, lteCounter->rrcSetupComplete, lteCounter->identityReq,
-        lteCounter->idnetityResp, lteCounter->attachReject, lteCounter->tauReject, lteCounter->rrcRelease,
-        lteCounter->rrcConnReject, lteCounter->rrcReestablishmentReq, lteCounter->rrcReestabReject,
-        lteCounter->ueInfoReq, lteCounter->ueInfoRsp);
-    
-    sprintf(l2CounterVal, "%s\n|%8d |%8d |%8d |%8d |", 
-        "+---------+---------+---------+---------+",
-        lteCounter->ulCCCH, lteCounter->dlCCCH, lteCounter->ulDCCH, lteCounter->dlDCCH);
-
-    sprintf(macCounterVal, "%s\n|%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |%8d |", 
-        "+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+---------+",
-        lteCounter->activeUe, lteCounter->rach, lteCounter->rar, lteCounter->msg3,
-        lteCounter->contResol, lteCounter->crcValid, lteCounter->harqAck, lteCounter->msg3Expired, 
-        lteCounter->crcError, lteCounter->harqNack, lteCounter->contNack);
-
-    printf("%s\n%s\n\n%s\n%s\n\n", rrcCounterName, rrcCounterVal, l2CounterName, l2CounterVal);
-    printf("%s\n%s\n\n", macCounterName, macCounterVal);
-#else
     system("clear");
 
     time_t timep;   
@@ -184,7 +202,12 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     // memset((void*)dispChar, 32, 1000);
 
     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
-    printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+    if (m_udpSocket) {
+        printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+    }
+    if (m_file) {
+        printf("File name: %s\n", m_filename.c_str());
+    }
     printf("Name            Accumulate  Delta(%ds)\n", m_period/1000);
     printf("--------------------------------------\n");
 
@@ -224,5 +247,4 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     sumLength += varLength;
 
     printf("%s", dispChar);
-#endif
 }

@@ -13,24 +13,31 @@
 using namespace kpi;
 using namespace std;
 
+int gWriteOption = 0;
 string gServerIp = "192.168.1.166";
 unsigned short gServerPort = 50001;
 int gPeriod = 10000;
 
+UInt8 gLogLevel = 2;
+
 void showUsage() {
-    cout << "Usage: kpi [-i serverIp] [-p port] [-t period]" << endl << endl;
+    cout << "Usage: kpi [-w filename] [-i serverIp] [-p port] [-t period]" << endl << endl;
 
     cout << "Options: " << endl;
+    cout << "-w : Write option, 0 -> only display on cosole; 1 -> write to file; 2 -> write to socket, default: " << gWriteOption << endl;
     cout << "-i : Server IP to receive KPI data, default: " << gServerIp << endl;
     cout << "-p : Server Port, default: " << gServerPort << endl;
     cout << "-t : The period (in seconds) for sending/displaying KPI data, default: " << gPeriod/1000 << endl;
     cout << endl;
 
-    cout << "Example: kpi -i 192.168.1.166 -p 50001 -t 10" << endl;
+    cout << "Example: kpi -w 2 -i 192.168.1.166 -p 50001 -t 1" << endl;
 }
 
 void parseOptions(string option, string value) {
-    if (option.compare("-i") == 0) {
+    if (option.compare("-w") == 0) {
+        gWriteOption = Util::s2i(value);
+        cout << "gWriteOption = " << gWriteOption << endl;
+    } else if (option.compare("-i") == 0) {
         gServerIp = value;
         cout << "gServerIp = " << gServerIp << endl;
     } else if (option.compare("-p") == 0) {

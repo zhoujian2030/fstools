@@ -12,6 +12,7 @@
 #include "Qmss.h"
 #include "MacInterface.h"
 #include "UdpSocket.h"
+#include "File.h"
 #include <string>
 
 
@@ -35,10 +36,14 @@ namespace kpi {
         UInt32 m_index;
 
         Qmss* m_macQmss;
+        UInt32 m_period;
+        int m_writeOption;
 
         net::UdpSocket* m_udpSocket;
         net::Socket::InetAddressPort m_kpiServerAddress;
-        UInt32 m_period;
+
+        cm::File* m_file;
+        std::string m_filename;
 
         bool m_sendToServerFlag;
     };

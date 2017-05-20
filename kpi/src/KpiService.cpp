@@ -17,8 +17,6 @@ using namespace kpi;
 using namespace net;
 using namespace cm;
 
-UInt8 gLogLevel = 2;
-
 // ------------------------------------------------
 KpiService::KpiService(std::string serviceName) 
 : Service(serviceName)

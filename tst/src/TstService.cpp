@@ -48,4 +48,6 @@ unsigned long TstService::run() {
     m_simQmss->send(m_sendBuffer, length);    
 
     m_stopEvent.wait();
+
+    return 0;
 }

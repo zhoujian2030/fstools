@@ -4,6 +4,7 @@
 
 #include <string>
 
+extern int gWriteOption;
 extern std::string gServerIp;
 extern unsigned short gServerPort;
 extern int gPeriod;
