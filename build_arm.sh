@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export PLATFORM=arm
 export PATH=$PATH:/omap/eldk/usr/bin/
 export PLATFORM_CXX=arm-linux-g++
 export PLATFORM_CC=arm-linux-gcc
@@ -24,3 +25,5 @@ else
     cp kpi/obj/kpi /mnt/hgfs/c/share/
     cp tst/obj/tst /mnt/hgfs/c/share/
 fi
+
+
