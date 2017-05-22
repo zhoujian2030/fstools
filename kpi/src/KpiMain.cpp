@@ -21,10 +21,10 @@ int gPeriod = 10000;
 UInt8 gLogLevel = 2;
 
 void showUsage() {
-    cout << "Usage: kpi [-w filename] [-i serverIp] [-p port] [-t period]" << endl << endl;
+    cout << "Usage: kpi [-w writeOption] [-i serverIp] [-p port] [-t period]" << endl << endl;
 
     cout << "Options: " << endl;
-    cout << "-w : Write option, 0 -> only display on cosole; 1 -> write to file; 2 -> write to socket, default: " << gWriteOption << endl;
+    cout << "-w : Write option, 0 -> only display on console; 1 -> write to file; 2 -> write to socket; default: " << gWriteOption << endl;
     cout << "-i : Server IP to receive KPI data, default: " << gServerIp << endl;
     cout << "-p : Server Port, default: " << gServerPort << endl;
     cout << "-t : The period (in seconds) for sending/displaying KPI data, default: " << gPeriod/1000 << endl;
