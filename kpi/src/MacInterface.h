@@ -19,6 +19,7 @@ typedef unsigned char UInt8;
 
 // module id
 #define KPI_MODULE_ID            0x9901
+#define CLI_MODULE_ID            0x9902
 #define MAC_MODULE_ID            7
 #define RRC_MODULE_ID            3 
 #define RLC_MODULE_ID            6
@@ -32,6 +33,10 @@ typedef unsigned char UInt8;
 typedef enum {
 	MAC_KPI_REQ = 0x01
 } KPIReqAPI;
+
+typedef enum {
+    MAC_CLI_SET_LOG_LEVEL_REQ = 0x01
+} CLIReqAPI;
 
 #define LTE_MSG_HEAD_LENGTH 10
 #define MAC_VAR_SIZE(x) 1
@@ -70,6 +75,8 @@ typedef struct {
     UInt32 rrcReestabReject;
     UInt32 ueInfoReq;
     UInt32 ueInfoRsp;
+    UInt32 rrcReconfigReq;
+    UInt32 rrcReconfigCompl;
 
     UInt32 ulCCCH;
     UInt32 dlCCCH;

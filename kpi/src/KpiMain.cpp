@@ -64,6 +64,8 @@ int main(int argc, char* argv[]) {
                 return 0;
             }
         }
+    } else {
+        
     }
 
     KpiService* kpiService = new KpiService("KPI Service");
