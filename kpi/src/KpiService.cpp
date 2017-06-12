@@ -37,6 +37,10 @@ unsigned long KpiService::run() {
     m_macQmss = new Qmss(Qmss::QID_KPI_SEND_TO_MAC, Qmss::QID_KPI_RECV_FROM_MAC);
     KpiWorker* pKpiWorker = new KpiWorker("KpiWorker", m_macQmss);
 
+    LteCounter lteCounter;
+    memset((void*)&lteCounter, 0, sizeof(LteCounter));
+    pKpiWorker->displayCounter(&lteCounter);
+
     pKpiWorker->start();
 
     while (true) {

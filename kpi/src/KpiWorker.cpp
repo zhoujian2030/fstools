@@ -133,7 +133,7 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("ReestRej; ");
         kpiCounterName.append("UEInfReq; ");
         kpiCounterName.append("UEInfRsp; ");
-        kpiCounterName.append("RRCRecfgReq; ");
+        kpiCounterName.append("RRCRecfg; ");
         kpiCounterName.append("RRCRecfgCompl; ");
         kpiCounterName.append("ULCCCH; ");
         kpiCounterName.append("DLCCCH; ");
@@ -268,7 +268,7 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "Identity Req    %10d  %8d\n", accumulateCounter->identityReq, deltaCounter->identityReq);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Identity Resp   %10d  %8d\n", accumulateCounter->idnetityResp, deltaCounter->idnetityResp);
+    varLength = sprintf(dispChar + sumLength, "Identity Resp   %10d  %8d\n", accumulateCounter->identityResp, deltaCounter->identityResp);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "TAU Reject      %10d  %8d\n", accumulateCounter->tauReject, deltaCounter->tauReject);
     sumLength += varLength;
@@ -277,5 +277,33 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
     sumLength += varLength;
 
-    printf("%s", dispChar);
+    printf("%s\n", dispChar);
+
+    float setupDivReq = 0;
+    float msg3DivRach = 0;
+    float setupComplDivSetup = 0;
+    float idRspDivSetupCompl = 0;
+    float idRspDivIdReq = 0;
+
+    if (accumulateCounter->rrcReq != 0) {
+        setupDivReq = (accumulateCounter->rrcSetup * 100.0) / accumulateCounter->rrcReq;
+    }
+    if (accumulateCounter->rach != 0) {
+        msg3DivRach = (accumulateCounter->msg3 * 100.0) / accumulateCounter->rach;
+    }  
+    if (accumulateCounter->rrcSetup != 0) {
+        setupComplDivSetup = (accumulateCounter->rrcSetupComplete * 100.0) / accumulateCounter->rrcSetup;
+    }  
+    if (accumulateCounter->rrcSetupComplete != 0) {
+        idRspDivSetupCompl = (accumulateCounter->identityResp * 100.0) / accumulateCounter->rrcSetupComplete;
+    }  
+    if (accumulateCounter->identityReq != 0) {
+        idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
+    }  
+
+    printf("RrcSetup/RrcReq:           %4f\n", setupDivReq);
+    printf("MSG3/RACH:                 %4f\n", msg3DivRach);
+    printf("RrcSetupCompl/RrcSetup:    %4f\n", setupComplDivSetup);
+    printf("IdentityRsp/RrcSetupCompl: %4f\n", idRspDivSetupCompl);
+    printf("IdentityRsp/IdentityReq:   %4f\n", idRspDivIdReq);
 }

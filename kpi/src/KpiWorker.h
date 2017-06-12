@@ -24,10 +24,10 @@ namespace kpi {
         virtual ~KpiWorker();
 
         virtual unsigned long run();
+        void displayCounter(LteCounter* lteCounter);
 
     private:
         void handleMacKpiResponse(UInt32 length);
-        void displayCounter(LteCounter* lteCounter);
         char m_recvBuffer[MAC_RECV_MSG_BUFFER_LENGTH];
         UInt32* m_prevKpiArray;
         SInt32* m_deltaKpiArray;

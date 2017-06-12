@@ -66,7 +66,7 @@ typedef struct {
 	UInt32 rrcSetup;
 	UInt32 rrcSetupComplete;
 	UInt32 identityReq;
-	UInt32 idnetityResp;
+	UInt32 identityResp;
 	UInt32 attachReject;
 	UInt32 tauReject;
 	UInt32 rrcRelease;
