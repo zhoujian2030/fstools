@@ -301,9 +301,9 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
         idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
     }  
 
-    printf("RrcSetup/RrcReq:           %4f\n", setupDivReq);
-    printf("MSG3/RACH:                 %4f\n", msg3DivRach);
-    printf("RrcSetupCompl/RrcSetup:    %4f\n", setupComplDivSetup);
-    printf("IdentityRsp/RrcSetupCompl: %4f\n", idRspDivSetupCompl);
-    printf("IdentityRsp/IdentityReq:   %4f\n", idRspDivIdReq);
+    printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
+    printf("MSG3/RACH:                 %f\n", msg3DivRach);
+    printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
+    printf("IdentityRsp/RrcSetupCompl: %f\n", idRspDivSetupCompl);
+    printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
 }

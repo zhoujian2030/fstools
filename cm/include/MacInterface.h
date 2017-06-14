@@ -38,7 +38,7 @@ typedef enum {
     MAC_CLI_SET_LOG_LEVEL_REQ = 0x01
 } CLIReqAPI;
 
-#define LTE_MSG_HEAD_LENGTH 10
+#define LTE_MSG_HEAD_LENGTH 12
 #define MAC_VAR_SIZE(x) 1
 typedef struct {
 	UInt16 transactionId;
@@ -46,8 +46,13 @@ typedef struct {
 	UInt16 dstModuleId;
 	UInt16 msgId;
 	UInt16 length;
+    UInt16 spare;
 	char msgBody[MAC_VAR_SIZE(length)];
 } LteMacMsg;
+
+typedef struct {
+    UInt32 logLevel;
+} SetLogLevelReq;
 
 typedef struct {	
     UInt32 activeUe;

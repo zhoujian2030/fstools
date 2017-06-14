@@ -19,9 +19,9 @@ public:
     static void initQmss();
 
     enum {
-        QID_KPI_SEND_TO_MAC = OAM_SEND_L2_CFG_REQ,
+        QID_CLI_SEND_TO_L2 = OAM_SEND_L2_CFG_REQ,
 
-        QID_KPI_RECV_FROM_MAC = L3_RECS_CMAC_CFG_RSP,
+        QID_CLI_RECV_FROM_L2 = L3_RECS_CMAC_CFG_RSP,
         
         QID_TST_SEND_START_TEST = CMAC_SEND_L2_HARQ_ACK,
 

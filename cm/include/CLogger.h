@@ -15,6 +15,7 @@
 
 #define UE_LOGGER_NAME "UE"
 #define KPI_LOGGER_NAME "KPI"
+#define CLI_LOGGER_NAME "CLI"
 #define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
 #define FUNCNAME __FUNCTION__
 #define LINE     __LINE__
