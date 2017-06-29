@@ -21,13 +21,19 @@ int gPeriod = 10000;
 UInt8 gLogLevel = 2;
 
 void showUsage() {
-    cout << "Usage: kpi [-w writeOption] [-i serverIp] [-p port] [-t period]" << endl << endl;
+    cout << "Usage: kpi [-w writeOption] [-i serverIp] [-p port] [-t period] [--debug]" << endl << endl;
 
     cout << "Options: " << endl;
-    cout << "-w : Write option, 0 -> only display on console; 1 -> write to file; 2 -> write to socket; default: " << gWriteOption << endl;
+    cout << "-w : Write option "<< endl;
+    cout << "     0 -> only display on console" << endl;
+    cout << "     1 -> write to file and console" << endl;
+    cout << "     2 -> write to socket and console" << endl;
+    cout << "     3 -> write to file only" << endl;
+    cout << "     default: " << gWriteOption << endl;
     cout << "-i : Server IP to receive KPI data, default: " << gServerIp << endl;
     cout << "-p : Server Port, default: " << gServerPort << endl;
     cout << "-t : The period (in seconds) for sending/displaying KPI data, default: " << gPeriod/1000 << endl;
+    cout << "--debug : enable debug log for this kpi tool" << endl;
     cout << endl;
 
     cout << "Example: kpi -w 2 -i 192.168.1.166 -p 50001 -t 1" << endl;
@@ -57,11 +63,16 @@ int main(int argc, char* argv[]) {
     if (argc > 1) {
         for (int i=1; i<argc;) {
             string option(argv[i++]);
-            if (i<argc) {
-                parseOptions(option, string(argv[i++]));
+
+            if (option.compare("--debug") == 0) {
+                gLogLevel = 1;
             } else {
-                showUsage();
-                return 0;
+                if (i<argc) {
+                    parseOptions(option, string(argv[i++]));
+                } else {
+                    showUsage();
+                    return 0;
+                }
             }
         }
     } else {

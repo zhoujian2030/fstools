@@ -9,7 +9,9 @@
 #define KPI_WORKER_H
 
 #include "Thread.h"
+#ifndef KPI_L3
 #include "Qmss.h"
+#endif
 #include "MacInterface.h"
 #include "UdpSocket.h"
 #include "File.h"
@@ -20,11 +22,15 @@ namespace kpi {
 
     class KpiWorker : public cm::Thread {
     public:
+#ifdef KPI_L3
+        KpiWorker(std::string workerName, net::UdpSocket* udpServerSocket);
+#else
         KpiWorker(std::string workerName, Qmss* qmss);
+#endif
         virtual ~KpiWorker();
 
         virtual unsigned long run();
-        void displayCounter(LteCounter* lteCounter);
+        void displayCounter(void* counter);
 
     private:
         void handleMacKpiResponse(UInt32 length);
@@ -35,7 +41,12 @@ namespace kpi {
 
         UInt32 m_index;
 
+#ifdef KPI_L3
+        net::UdpSocket* m_udpServerSocket;
+        net::Socket::InetAddressPort m_rrcClientAddress;
+#else 
         Qmss* m_macQmss;
+#endif
         UInt32 m_period;
         int m_writeOption;
 

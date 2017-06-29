@@ -17,11 +17,17 @@ using namespace net;
 using namespace std;
 
 // ----------------------------------------
+#ifdef KPI_L3
+KpiWorker::KpiWorker(std::string workerName, UdpSocket* udpServerSocket)
+: Thread(workerName)
+{
+    m_udpServerSocket = udpServerSocket;//new UdpSocket(UDP_SERVER_IP_RECV_L3_KPI, UDP_SERVER_PORT_RECV_L3);
+#else
 KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 : Thread(workerName)
 {
-    // CMLogger::initConsoleLog();
     m_macQmss = qmss;
+#endif
     m_writeOption = gWriteOption;
     m_period = gPeriod;
 
@@ -34,11 +40,15 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
         Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, gServerIp, gServerPort);
     }
 
-    if (m_writeOption == 1) {
+    if (m_writeOption == 1 || m_writeOption == 3) {
         // char currPath[256];
         // getcwd(currPath, 256);
         // LOG_DBG(KPI_LOGGER_NAME, "[%s], Current path: %s\n", __func__, currPath);
+#ifndef GSM
         m_filename.append("/mnt/user2/lte_kpi_");
+#else
+        m_filename.append("/flash/appsys/common/gsm_kpi_");     
+#endif   
         time_t timep;   
         struct tm *p;     
         time(&timep);   
@@ -52,11 +62,19 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
         LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_filename.c_str());
     }
 
+#ifndef GSM 
     m_numKpiCounter = sizeof(LteCounter) / sizeof(UInt32);
     m_prevKpiArray = new UInt32[m_numKpiCounter];
     m_deltaKpiArray = new SInt32[m_numKpiCounter];
     memset((void*)m_prevKpiArray, 0, sizeof(LteCounter));
     memset((void*)m_deltaKpiArray, 0, sizeof(LteCounter));
+#else 
+    m_numKpiCounter = sizeof(GSMCounter) / sizeof(UInt32);
+    m_prevKpiArray = new UInt32[m_numKpiCounter];
+    m_deltaKpiArray = new SInt32[m_numKpiCounter];
+    memset((void*)m_prevKpiArray, 0, sizeof(GSMCounter));
+    memset((void*)m_deltaKpiArray, 0, sizeof(GSMCounter));
+#endif
 
     m_index = 0;
 
@@ -72,6 +90,10 @@ KpiWorker::~KpiWorker() {
     if (m_writeOption == 1) {
         delete m_file;
     }
+
+#ifdef KPI_L3
+    delete m_udpServerSocket;
+#endif
 }
 
 // ----------------------------------------
@@ -81,34 +103,7 @@ unsigned long KpiWorker::run() {
     if ((m_udpSocket != 0) || (m_file != 0)) {
         std::string kpiCounterName;
         kpiCounterName.append("NO.; ");
-        // kpiCounterName.append("ActiveUe, ActiveUe delt; ");
-        // kpiCounterName.append("RACH, RACH delt; ");
-        // kpiCounterName.append("RAR, RAR delt; ");
-        // kpiCounterName.append("MSG3, MSG3 delt; ");
-        // kpiCounterName.append("ContResl, ContResl delt; ");
-        // kpiCounterName.append("CrcValid, CrcValid delt; ");
-        // kpiCounterName.append("HarqAck, HarqAck delt; ");
-        // kpiCounterName.append("MSG3Exp, MSG3Exp delt; ");
-        // kpiCounterName.append("CrcError, CrcError delt; ");
-        // kpiCounterName.append("HarqNAck, HarqNAck delt; ");
-        // kpiCounterName.append("ContNack, ContNack delt; ");
-        // kpiCounterName.append("RRCReq, RRCReq delt; ");
-        // kpiCounterName.append("RRCSetup, RRCSetup delt; ");
-        // kpiCounterName.append("RRCCompl, RRCCompl delt; ");
-        // kpiCounterName.append("IDReq, IDReq delt; ");
-        // kpiCounterName.append("IDResp, IDResp delt; ");
-        // kpiCounterName.append("AttRej, AttRej delt; ");
-        // kpiCounterName.append("TAURej, TAURej delt; ");
-        // kpiCounterName.append("RRCRel, RRCRel delt; ");
-        // kpiCounterName.append("ReestReq, ReestReq delt; ");
-        // kpiCounterName.append("RRCRej, RRCRej delt; ");
-        // kpiCounterName.append("ReestRej, ReestRej delt; ");
-        // kpiCounterName.append("UEInfReq, UEInfReq delt; ");
-        // kpiCounterName.append("UEInfRsp, UEInfRsp delt; ");
-        // kpiCounterName.append("ULCCCH, ULCCCH delt; ");
-        // kpiCounterName.append("DLCCCH, DLCCCH delt; ");
-        // kpiCounterName.append("ULDCCH, ULDCCH delt; ");
-        // kpiCounterName.append("DLDCCH, DLDCCH delt; ");
+#ifndef GSM
         kpiCounterName.append("ActiveUe; ");
         kpiCounterName.append("RACH; ");
         kpiCounterName.append("RAR; ");
@@ -139,6 +134,20 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("DLCCCH; ");
         kpiCounterName.append("ULDCCH; ");
         kpiCounterName.append("DLDCCH; ");
+#else 
+        kpiCounterName.append("ChannReq; ");
+        kpiCounterName.append("ImmediaAssign; ");
+        kpiCounterName.append("SABM; ");
+        kpiCounterName.append("RRSetupUA; ");
+        kpiCounterName.append("imsiIDReq; ");
+        kpiCounterName.append("imsiIDResp; ");
+        kpiCounterName.append("imeiIDReq; ");
+        kpiCounterName.append("imeiIDResp; ");
+        kpiCounterName.append("LACReject; ");
+        kpiCounterName.append("ChannRel; ");
+        kpiCounterName.append("DISC; ");
+        kpiCounterName.append("RRChannUA; ");      
+#endif
         kpiCounterName.append("\n");
 
         if (m_udpSocket) {
@@ -157,12 +166,21 @@ unsigned long KpiWorker::run() {
 
     UInt32 length = 0;
     while (true) {
+#ifdef KPI_L3
+        length = m_udpServerSocket->receive(m_recvBuffer, MAC_RECV_MSG_BUFFER_LENGTH, m_rrcClientAddress);
+        if (length > 0) {
+            handleMacKpiResponse(length);
+        } else {
+            LOG_ERROR(KPI_LOGGER_NAME, "[%s], receive UDP data error\n", __func__);
+        }
+#else 
         if ((length = m_macQmss->recv(m_recvBuffer)) > 0) {
             handleMacKpiResponse(length);
         } else {
             LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv MAC msg length = %d\n", __func__, length);
             Thread::sleep(m_period);
         }
+#endif
     }
 
     LOG_DBG(KPI_LOGGER_NAME, "[%s], KpiWorker exited\n", __func__);
@@ -171,7 +189,7 @@ unsigned long KpiWorker::run() {
 
 // ----------------------------------------
 void KpiWorker::handleMacKpiResponse(UInt32 length) {
-    LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv MAC KPI response length = %d\n", __func__, length);
+    LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv KPI response length = %d\n", __func__, length);
 
     char kpiChar[1500];
     int totalLen = 0;
@@ -209,14 +227,16 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             m_file->write((const char*)kpiChar, totalLen, writeBytes);
         }
         
-        LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
-        displayCounter(lteCounter);
+        if (gWriteOption < 3) {
+            //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
+            displayCounter(m_recvBuffer);
+        }
     } else {
-        LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid mac kpi response\n", __func__);
+        LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid kpi response\n", __func__);
     }
 }
 
-void KpiWorker::displayCounter(LteCounter* lteCounter) {
+void KpiWorker::displayCounter(void* counter) {
     system("clear");
 
     time_t timep;   
@@ -225,8 +245,13 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     time(&timep);   
     p = localtime(&timep);
 
+#ifndef GSM    
     LteCounter* accumulateCounter = (LteCounter*)m_prevKpiArray;
     LteCounter* deltaCounter = (LteCounter*)m_deltaKpiArray;
+#else 
+    GSMCounter* accumulateCounter = (GSMCounter*)m_prevKpiArray;
+    GSMCounter* deltaCounter = (GSMCounter*)m_deltaKpiArray;
+#endif
     char dispChar[2048];
     int sumLength = 0;
     int varLength = 0;
@@ -242,6 +267,7 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     printf("Name            Accumulate  Delta(%ds)\n", m_period/1000);
     printf("--------------------------------------\n");
 
+#ifndef GSM
     varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
@@ -306,4 +332,68 @@ void KpiWorker::displayCounter(LteCounter* lteCounter) {
     printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
     printf("IdentityRsp/RrcSetupCompl: %f\n", idRspDivSetupCompl);
     printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
+#else 
+    varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Immedia Assign  %10d  %8d\n", accumulateCounter->immediateAssign, deltaCounter->immediateAssign);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SABM            %10d  %8d\n", accumulateCounter->SABM, deltaCounter->SABM);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RR Setup UA     %10d  %8d\n", accumulateCounter->RRsetupUA, deltaCounter->RRsetupUA);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "IMSI ID Req     %10d  %8d\n", accumulateCounter->imsiIDReq, deltaCounter->imsiIDReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "IMSI ID Resp    %10d  %8d\n", accumulateCounter->imsiIDResp, deltaCounter->imsiIDResp);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "IMEI ID Req     %10d  %8d\n", accumulateCounter->imeiIDReq, deltaCounter->imeiIDReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "IMEI ID Resp    %10d  %8d\n", accumulateCounter->imeiIDResp, deltaCounter->imeiIDResp);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "LAC Reject      %10d  %8d\n", accumulateCounter->LacReject, deltaCounter->LacReject);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Channel Rel     %10d  %8d\n", accumulateCounter->channelRelease, deltaCounter->channelRelease);
+    sumLength += varLength;   
+    varLength = sprintf(dispChar + sumLength, "DISC            %10d  %8d\n", accumulateCounter->DISC, deltaCounter->DISC);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RR Channel UA   %10d  %8d\n", accumulateCounter->RRchannelUA, deltaCounter->RRchannelUA);
+    sumLength += varLength;   
+
+    printf("%s\n", dispChar);
+
+    float immediaADivChannReq = 0;
+    float sabmDivImmediaA = 0;
+    float rrSetupUADivSABM = 0;
+    float imsiIdRspDivImsiIdReq = 0;
+    float imeiIdRspDivImeiIdReq = 0;
+    float channRelDivDisc = 0;
+    float RRChannUADivDisc = 0;
+
+    if (accumulateCounter->channelReq != 0) {
+        immediaADivChannReq = (accumulateCounter->immediateAssign * 100.0) / accumulateCounter->channelReq;
+    }
+    if (accumulateCounter->immediateAssign != 0) {
+        sabmDivImmediaA = (accumulateCounter->SABM * 100.0) / accumulateCounter->immediateAssign;
+    }  
+    if (accumulateCounter->SABM != 0) {
+        rrSetupUADivSABM = (accumulateCounter->RRsetupUA * 100.0) / accumulateCounter->SABM;
+    }  
+    if (accumulateCounter->imsiIDReq != 0) {
+        imsiIdRspDivImsiIdReq = (accumulateCounter->imsiIDResp * 100.0) / accumulateCounter->imsiIDReq;
+    }  
+    if (accumulateCounter->imeiIDReq != 0) {
+        imeiIdRspDivImeiIdReq = (accumulateCounter->imeiIDResp * 100.0) / accumulateCounter->imeiIDReq;
+    }  
+    if (accumulateCounter->DISC != 0) {
+        channRelDivDisc = (accumulateCounter->channelRelease * 100.0) / accumulateCounter->DISC;
+        RRChannUADivDisc = (accumulateCounter->RRchannelUA * 100.0) / accumulateCounter->DISC;
+    }  
+
+    printf("ImmediaAss/ChannelReq:     %f\n", immediaADivChannReq);
+    printf("SABM/ImmediaAss:           %f\n", sabmDivImmediaA);
+    printf("RRSetup/SABM:              %f\n", rrSetupUADivSABM);
+    printf("IMSIIdRsp/IMSIIDReq:       %f\n", imsiIdRspDivImsiIdReq);
+    printf("IMEIIDRsp/IMEIIDRsp:       %f\n", imeiIdRspDivImeiIdReq); 
+    printf("ChannelRel/DISC:           %f\n", channRelDivDisc);
+    printf("RRChannelUA/DISC:          %f\n", RRChannUADivDisc);  
+#endif
 }

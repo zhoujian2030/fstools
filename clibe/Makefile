@@ -1,5 +1,5 @@
 # Target  name
-TARGET = kpi
+TARGET = cli-be
 
 # Directories
 OBJDIR = obj
@@ -16,7 +16,7 @@ SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX -DKPI_L3 -DGSM
+CFLAGS += -DOS_LINUX
 
 all: $(TARGET)
 

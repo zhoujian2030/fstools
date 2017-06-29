@@ -31,7 +31,8 @@ typedef unsigned char UInt8;
 
 // msg id
 typedef enum {
-	MAC_KPI_REQ = 0x01
+	MAC_KPI_REQ = 0x01,
+    RRC_KPI_REQ = 0x02
 } KPIReqAPI;
 
 typedef enum {
@@ -80,7 +81,7 @@ typedef struct {
     UInt32 rrcReestabReject;
     UInt32 ueInfoReq;
     UInt32 ueInfoRsp;
-    UInt32 rrcReconfigReq;
+    UInt32 rrcReconfig;
     UInt32 rrcReconfigCompl;
 
     UInt32 ulCCCH;
@@ -88,5 +89,22 @@ typedef struct {
     UInt32 ulDCCH;
     UInt32 dlDCCH;
 } LteCounter;
+
+typedef struct {
+
+  UInt32 channelReq;
+  UInt32 immediateAssign;
+  UInt32 SABM;
+  UInt32 RRsetupUA;
+  UInt32 imsiIDReq;
+  UInt32 imsiIDResp;
+  UInt32 imeiIDReq;
+  UInt32 imeiIDResp;
+  UInt32 LacReject;
+  UInt32 channelRelease;
+  UInt32 DISC;
+  UInt32 RRchannelUA;
+
+} GSMCounter;
 
 #endif

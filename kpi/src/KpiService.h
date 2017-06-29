@@ -30,7 +30,12 @@ namespace kpi {
 
         int sendMacKpiReq();
 
+#ifdef KPI_L3
+        net::UdpSocket* m_udpServerSocket;
+        net::Socket::InetAddressPort m_rrcAddress;
+#else
         Qmss* m_macQmss;
+#endif
         char m_sendBuffer[MAC_SEND_MSG_BUFFER_LENGTH];
         unsigned int m_transactionId;
 
