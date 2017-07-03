@@ -134,6 +134,8 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("DLCCCH; ");
         kpiCounterName.append("ULDCCH; ");
         kpiCounterName.append("DLDCCH; ");
+        kpiCounterName.append("HarqDTX; ");
+        kpiCounterName.append("HarqOther; ");
 #else 
         kpiCounterName.append("ChannReq; ");
         kpiCounterName.append("ImmediaAssign; ");
@@ -284,6 +286,10 @@ void KpiWorker::displayCounter(void* counter) {
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "HARQ NACK       %10d  %8d\n", accumulateCounter->harqNack, deltaCounter->harqNack);
     sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ DTX        %10d  %8d\n", accumulateCounter->harqDtx, deltaCounter->harqDtx);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ Other      %10d  %8d\n", accumulateCounter->harqOther, deltaCounter->harqOther);
+    sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RRC Setup       %10d  %8d\n", accumulateCounter->rrcSetup, deltaCounter->rrcSetup);
@@ -308,7 +314,7 @@ void KpiWorker::displayCounter(void* counter) {
     float setupDivReq = 0;
     float msg3DivRach = 0;
     float setupComplDivSetup = 0;
-    float idRspDivSetupCompl = 0;
+    //float idRspDivSetupCompl = 0;
     float idRspDivIdReq = 0;
 
     if (accumulateCounter->rrcReq != 0) {
@@ -320,9 +326,9 @@ void KpiWorker::displayCounter(void* counter) {
     if (accumulateCounter->rrcSetup != 0) {
         setupComplDivSetup = (accumulateCounter->rrcSetupComplete * 100.0) / accumulateCounter->rrcSetup;
     }  
-    if (accumulateCounter->rrcSetupComplete != 0) {
-        idRspDivSetupCompl = (accumulateCounter->identityResp * 100.0) / accumulateCounter->rrcSetupComplete;
-    }  
+    //if (accumulateCounter->rrcSetupComplete != 0) {
+    //    idRspDivSetupCompl = (accumulateCounter->identityResp * 100.0) / accumulateCounter->rrcSetupComplete;
+    //}  
     if (accumulateCounter->identityReq != 0) {
         idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
     }  
@@ -330,7 +336,7 @@ void KpiWorker::displayCounter(void* counter) {
     printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
     printf("MSG3/RACH:                 %f\n", msg3DivRach);
     printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
-    printf("IdentityRsp/RrcSetupCompl: %f\n", idRspDivSetupCompl);
+    //printf("IdentityRsp/RrcSetupCompl: %f\n", idRspDivSetupCompl);
     printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
 #else 
     varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);

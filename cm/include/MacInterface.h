@@ -88,6 +88,9 @@ typedef struct {
     UInt32 dlCCCH;
     UInt32 ulDCCH;
     UInt32 dlDCCH;
+
+    UInt32 harqDtx;
+    UInt32 harqOther; 
 } LteCounter;
 
 typedef struct {
