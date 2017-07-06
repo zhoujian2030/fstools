@@ -278,6 +278,8 @@ void KpiWorker::displayCounter(void* counter) {
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "MSG3 Expired    %10d  %8d\n", accumulateCounter->msg3Expired, deltaCounter->msg3Expired);
     sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Conten Resol    %10d  %8d\n", accumulateCounter->contResol, deltaCounter->contResol);
+    sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "CRC Correct     %10d  %8d\n", accumulateCounter->crcValid, deltaCounter->crcValid);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "CRC Error       %10d  %8d\n", accumulateCounter->crcError, deltaCounter->crcError);
@@ -314,29 +316,34 @@ void KpiWorker::displayCounter(void* counter) {
     float setupDivReq = 0;
     float msg3DivRach = 0;
     float setupComplDivSetup = 0;
-    //float idRspDivSetupCompl = 0;
+    float setupComplDivContResol = 0;
+    float harqAckDivHarqInd = 0;
     float idRspDivIdReq = 0;
 
+    if (accumulateCounter->rach != 0) {
+        msg3DivRach = (accumulateCounter->msg3 * 100.0) / accumulateCounter->rach;
+    }      
+    if (accumulateCounter->harqAck != 0) {
+        harqAckDivHarqInd = (accumulateCounter->harqAck * 100.0) / (accumulateCounter->harqAck + accumulateCounter->harqNack +  accumulateCounter->harqDtx);
+    }  
     if (accumulateCounter->rrcReq != 0) {
         setupDivReq = (accumulateCounter->rrcSetup * 100.0) / accumulateCounter->rrcReq;
     }
-    if (accumulateCounter->rach != 0) {
-        msg3DivRach = (accumulateCounter->msg3 * 100.0) / accumulateCounter->rach;
-    }  
     if (accumulateCounter->rrcSetup != 0) {
         setupComplDivSetup = (accumulateCounter->rrcSetupComplete * 100.0) / accumulateCounter->rrcSetup;
-    }  
-    //if (accumulateCounter->rrcSetupComplete != 0) {
-    //    idRspDivSetupCompl = (accumulateCounter->identityResp * 100.0) / accumulateCounter->rrcSetupComplete;
-    //}  
+    }
+    if (accumulateCounter->contResol != 0) {
+        setupComplDivContResol = (accumulateCounter->rrcSetupComplete * 100.0) / accumulateCounter->contResol;
+    }
     if (accumulateCounter->identityReq != 0) {
         idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
     }  
 
-    printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
     printf("MSG3/RACH:                 %f\n", msg3DivRach);
+    printf("HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
+    printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
     printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
-    //printf("IdentityRsp/RrcSetupCompl: %f\n", idRspDivSetupCompl);
+    printf("RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
     printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
 #else 
     varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);
