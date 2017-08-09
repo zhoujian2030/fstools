@@ -8,6 +8,7 @@ extern int gWriteOption;
 extern std::string gServerIp;
 extern unsigned short gServerPort;
 extern int gPeriod;
+extern bool gShowAll;
 
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
 #define MAC_RECV_MSG_BUFFER_LENGTH 2048
@@ -51,6 +52,29 @@ typedef struct {
 	char msgBody[MAC_VAR_SIZE(length)];
 } LteMacMsg;
 
+#if 0
+typedef struct  S_L3MacMsgHead
+{
+	UInt32 mNum;          /* MagicNumber,固定值 ,0xDDCCBBAA,如果不是，则忽略接收此消息*/
+	UInt32 tLen;          /* 消息包的长度（包含消息头），以BYTE为单位 */
+	UInt32 sno;           /* 帧序号,从0x00开始递增，最大值为0xffffffff,发送和应答消息的对应关系是：应答SNO = 发送SNO+1 */
+	UInt8  attr;          /* 操作码，ATTR（操作的应答属性，，0xff 要回复,0xfe 不需回复) */
+	UInt8  common;        /* COMMOM(公共信息字段，指示消息发送者，0x01->L1; 0x02->L2; 0x03->L3; 0x04->S1; )*/
+	UInt16 opc;           /* OPC(消息的具体类型，16bit)*/
+	UInt32 ueId;          /* 与UE有关时使用，UE的唯一标识*/
+	UInt8  cellId;        /* Cell ID */
+	UInt8  rbId;          /* Rb ID 在Configuation 流程中无效，填 0xff  */
+	UInt16 reserved;      /* 保留  */
+	UInt32 handle;        /* 由L3随机分配，Cmac在Response时带上，唯一确认是本Request的回应 */
+	UInt32 reserved1;      /* 128bit对齐保留位 */
+}S_L3MacMsgHead;
+
+typedef struct S_L3MacCfgRsp
+{
+	UInt32           errorCode;        /* 见interfaceMacoDef.h中消息错误类型定义*/
+}S_L3MacCfgRsp;
+#endif
+
 typedef struct {
     UInt32 logLevel;
 } SetLogLevelReq;
@@ -91,6 +115,12 @@ typedef struct {
 
     UInt32 harqDtx;
     UInt32 harqOther; 
+    
+    UInt32 maxActiveMacUe;
+    UInt32 activeRlcUe;
+    UInt32 maxActiveRlcUe;
+    UInt32 activePdcpUe;
+    UInt32 maxActivePdcpUe;
 } LteCounter;
 
 typedef struct {

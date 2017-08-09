@@ -1,12 +1,12 @@
 /*
- * BeService.h
+ * BeTcpService.h
  *
- *  Created on: June 14, 2017
+ *  Created on: July 10, 2017
  *      Author: j.zhou
  */
 
-#ifndef BE_SERVICE_H
-#define BE_SERVICE_H
+#ifndef BE_TCP_SERVICE_H
+#define BE_TCP_SERVICE_H
 
 #include "Service.h"
 #include "CliTcpServerSocket.h"
@@ -15,24 +15,21 @@
 #include "MacInterface.h"
 #include "CliWorker.h"
 #include "Task.h"
-#include "UdpSocket.h"
-
-#define IP_RECV_MSG_BUFFER_LENGTH 1500
 
 namespace cli {
-    class BeService : public cm::Service {
+    class BeTcpService : public cm::Service {
     public: 
-        virtual ~BeService();     
+        virtual ~BeTcpService();     
 
-        static BeService* getInstance();
+        static BeTcpService* getInstance();
 
         void addBeTask(cm::Task* theTask, int userData);
 
     private:
-        BeService();
+        BeTcpService();
         virtual unsigned long run();   
 
-        static BeService* m_theInstance;
+        static BeTcpService* m_theInstance;
 
         CliWorker* getBeWorker();
 
@@ -41,7 +38,6 @@ namespace cli {
             MAC_NUM_CLI_BE_WORKERS = 3
         };
 
-#ifndef USING_UDP
         CliWorker* getWorker();
 
         CliTcpServerSocket* m_tcpServerSocket;
@@ -49,10 +45,6 @@ namespace cli {
         
         CliWorker** m_cliWorkerArray;
         int m_numOfCliWorkers;
-#else 
-        net::UdpSocket* m_udpSocket;
-        char m_recvBuffer[IP_RECV_MSG_BUFFER_LENGTH];
-#endif
 
         CliWorker** m_cliBeWorkerArray;
         int m_numOfCliBeWorkers;

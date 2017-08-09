@@ -1,7 +1,6 @@
 SUBDIRS = qmss \
 	kpi \
 	cli \
-	clibe \
 	tst
 
 BUILDDIRS = $(SUBDIRS:%=build-%)

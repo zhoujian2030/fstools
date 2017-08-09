@@ -20,6 +20,7 @@ namespace net {
     class TcpSocket : public Socket {
     public:
         TcpSocket(std::string remoteIp, unsigned short remotePort);
+        TcpSocket(int socket, Socket::InetAddressPort& theRemoteAddrPort);
         virtual ~TcpSocket();
 
         // add a TcpSocketListener to the TCP socket in acync mode
@@ -77,11 +78,7 @@ namespace net {
         void close();
 
     protected:
-        // Only TcpServerSocket is allowed to create a TcpSocket with an
-        // created(connected) socket fd.
         friend class TcpServerSocket;
-
-        TcpSocket(int socket, Socket::InetAddressPort& theRemoteAddrPort);
 
         virtual void handleInput(Socket* theSocket);
         virtual void handleOutput(Socket* theSocket);

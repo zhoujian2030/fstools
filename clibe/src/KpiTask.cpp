@@ -23,8 +23,9 @@ KpiTask::~KpiTask() {
 
 // ------------------------------------
 int KpiTask::execute() {
+    LOG_DBG(CLI_LOGGER_NAME, "[%s], Entry\n", __func__);
     if (m_kpiReq.writeToFile || m_kpiReq.writeToSocket) {
-
+        
         
 
     }

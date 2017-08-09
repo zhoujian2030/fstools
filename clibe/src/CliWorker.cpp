@@ -15,7 +15,7 @@ using namespace cli;
 CliWorker::CliWorker(int index)
 : Thread("CliWorkerThread"), m_index(index), m_task(0), m_executingTask(false)
 {
-
+    this->start();
 }
 
 // ------------------------------------------------
@@ -53,6 +53,7 @@ unsigned long CliWorker::run() {
     while (true) {
         m_event.wait();
 
+        LOG_DBG(CLI_LOGGER_NAME, "[%s], executing task begin\n", __func__);
         m_executingTask = true;
 
         m_lock.lock();
@@ -60,6 +61,8 @@ unsigned long CliWorker::run() {
         delete m_task;
         m_task = 0;
         m_lock.unlock();
+
+        LOG_DBG(CLI_LOGGER_NAME, "[%s], executing task end\n", __func__);
 
         m_executingTask = false;
     }

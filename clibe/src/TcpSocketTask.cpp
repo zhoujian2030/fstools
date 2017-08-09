@@ -43,6 +43,8 @@ int TcpSocketTask::execute() {
             LOG_DBG(CLI_LOGGER_NAME, "[%s], connection is closed or error happened\n", __func__);
             return TRC_END;
         }
+        LOG_DBG(CLI_LOGGER_NAME, "[%s], receive data: \n", __func__);
+        LOG_BUFFER(m_tcpDataBuffer->getStartOfDataPointer(), length);
 
         CliMsg* cliMsg = (CliMsg*)m_tcpDataBuffer->getStartOfDataPointer();
         switch (cliMsg->msgId) {

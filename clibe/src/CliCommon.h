@@ -10,6 +10,8 @@
 
 #include "MacInterface.h"
 
+#define IP_RECV_MSG_BUFFER_LENGTH 1500
+
 #define CLI_MSG_HEADER_LENGTH 4
 
 #define MAC_VAR_SIZE(x) 1

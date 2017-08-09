@@ -235,6 +235,30 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         }
     } else {
         LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid kpi response\n", __func__);
+#if 0
+        Qmss* qmss = new Qmss(L1_SEND_CMAC_REPLY, Qmss::QID_CLI_RECV_FROM_L2);
+        
+        // For test
+        S_L3MacMsgHead* msg = (S_L3MacMsgHead*)m_recvBuffer;
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], mNum = %u\n", __func__, msg->mNum);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], tLen = %d\n", __func__, msg->tLen);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], sno = %d\n", __func__, msg->sno);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], attr = %d\n", __func__, msg->attr);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], common = %d\n", __func__, msg->common);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], opc = %d\n", __func__, msg->opc);
+
+        msg->mNum = 0xDDCCBBAA;
+        msg->sno = 2;
+        // msg->opc = 6;
+        msg->tLen = sizeof(S_L3MacMsgHead) + sizeof(S_L3MacCfgRsp);
+        S_L3MacCfgRsp* pCfgRsp = (S_L3MacCfgRsp*)(m_recvBuffer+sizeof(S_L3MacMsgHead));
+        pCfgRsp->errorCode = 0;
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], msg = %p, pCfgRsp = %p\n", __func__, msg, pCfgRsp);
+        LOG_BUFFER(m_recvBuffer, msg->tLen);
+
+        Thread::sleep(10000);        
+        qmss->send(m_recvBuffer, msg->tLen);
+#endif
     }
 }
 
@@ -270,8 +294,8 @@ void KpiWorker::displayCounter(void* counter) {
     printf("--------------------------------------\n");
 
 #ifndef GSM
-    varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
-    sumLength += varLength;
+    // varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
+    // sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "MSG3            %10d  %8d\n", accumulateCounter->msg3, deltaCounter->msg3);
@@ -344,7 +368,26 @@ void KpiWorker::displayCounter(void* counter) {
     printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
     printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
     printf("RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
-    printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
+    printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);    
+       
+    if (gShowAll) {
+        static UInt8 count = 0;
+        static UInt32 maxIdResp = 0;
+        if (count > 1) {
+            if (maxIdResp < deltaCounter->identityResp) {
+                maxIdResp = deltaCounter->identityResp;
+            }
+            printf("\n");
+            printf("Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
+        } else {
+            count++;
+        }
+
+        printf("\n");
+        printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
+        printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
+        printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+    }
 #else 
     varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);
     sumLength += varLength;

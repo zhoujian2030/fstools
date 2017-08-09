@@ -19,9 +19,10 @@ unsigned short gServerPort = 50001;
 int gPeriod = 10000;
 
 UInt8 gLogLevel = 2;
+bool gShowAll = false;
 
 void showUsage() {
-    cout << "Usage: kpi [-w writeOption] [-i serverIp] [-p port] [-t period] [--debug]" << endl << endl;
+    cout << "Usage: kpi [-w writeOption] [-i serverIp] [-p port] [-t period] [--all] [--debug]" << endl << endl;
 
     cout << "Options: " << endl;
     cout << "-w : Write option "<< endl;
@@ -34,6 +35,7 @@ void showUsage() {
     cout << "-p : Server Port, default: " << gServerPort << endl;
     cout << "-t : The period (in seconds) for sending/displaying KPI data, default: " << gPeriod/1000 << endl;
     cout << "--debug : enable debug log for this kpi tool" << endl;
+    cout << "--all :   show all kpi details if display on console is enabled" << endl;
     cout << endl;
 
     cout << "Example: kpi -w 2 -i 192.168.1.166 -p 50001 -t 1" << endl;
@@ -66,6 +68,8 @@ int main(int argc, char* argv[]) {
 
             if (option.compare("--debug") == 0) {
                 gLogLevel = 1;
+            } else if (option.compare("--all") == 0) {
+                gShowAll = true;
             } else {
                 if (i<argc) {
                     parseOptions(option, string(argv[i++]));
