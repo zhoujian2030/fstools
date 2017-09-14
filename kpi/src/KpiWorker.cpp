@@ -16,6 +16,9 @@ using namespace kpi;
 using namespace net;
 using namespace std;
 
+#define VERSION         1001
+#define VERSION_LEN     4
+
 // ----------------------------------------
 #ifdef KPI_L3
 KpiWorker::KpiWorker(std::string workerName, UdpSocket* udpServerSocket)
@@ -33,6 +36,8 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 
     m_udpSocket = 0;
     m_file = 0;
+
+    m_targetVersion = VERSION;
 
     if (m_writeOption == 2) {
         m_udpSocket = new UdpSocket();
@@ -198,8 +203,20 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
     int singleLen = 0;
 
     UInt32* kpiValArray = (UInt32*)m_recvBuffer;
-    UInt32 numKpi = length / sizeof(UInt32);
-    if (numKpi == m_numKpiCounter) {
+    m_targetVersion = *kpiValArray;
+    if (m_targetVersion < VERSION) {
+        system("clear");
+        if (m_targetVersion < 1000) {
+            printf("ERROR: version[%d] not upported\n", VERSION);
+        } else {
+            printf("ERROR: version[%d] mismatch, please downgrade to version[%d]\n", VERSION, m_targetVersion);
+        }        
+        exit(0);
+    }
+    kpiValArray++;
+
+    UInt32 numKpi = (length - VERSION_LEN) / sizeof(UInt32);
+    if (numKpi >= m_numKpiCounter) {
         m_index++;
         singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
         totalLen += singleLen;
@@ -283,6 +300,10 @@ void KpiWorker::displayCounter(void* counter) {
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
 
+    if (VERSION == m_targetVersion) {
+        printf("Version: %d\n", VERSION);
+        printf("-------------\n");
+    }
     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
     if (m_udpSocket) {
         printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
@@ -373,7 +394,7 @@ void KpiWorker::displayCounter(void* counter) {
     if (gShowAll) {
         static UInt8 count = 0;
         static UInt32 maxIdResp = 0;
-        if (count > 1) {
+        if (count > 2) {
             if (maxIdResp < deltaCounter->identityResp) {
                 maxIdResp = deltaCounter->identityResp;
             }
@@ -387,6 +408,11 @@ void KpiWorker::displayCounter(void* counter) {
         printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
         printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
         printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+    }
+
+    if (VERSION != m_targetVersion) {
+        printf("--------------------------------------\n");
+        printf("NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
     }
 #else 
     varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);

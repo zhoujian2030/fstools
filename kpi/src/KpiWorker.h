@@ -35,6 +35,9 @@ namespace kpi {
     private:
         void handleMacKpiResponse(UInt32 length);
         char m_recvBuffer[MAC_RECV_MSG_BUFFER_LENGTH];
+
+        UInt32 m_targetVersion;
+
         UInt32* m_prevKpiArray;
         SInt32* m_deltaKpiArray;
         UInt32 m_numKpiCounter;
