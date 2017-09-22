@@ -16,7 +16,7 @@ using namespace kpi;
 using namespace net;
 using namespace std;
 
-#define VERSION         1001
+#define VERSION         1003
 #define VERSION_LEN     4
 
 // ----------------------------------------
@@ -115,10 +115,10 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("MSG3; ");
         kpiCounterName.append("ContResl; ");
         kpiCounterName.append("CrcValid; ");
-        kpiCounterName.append("HarqAck; ");
+        kpiCounterName.append("HarqAckRecv; ");
         kpiCounterName.append("MSG3Exp; ");
         kpiCounterName.append("CrcError; ");
-        kpiCounterName.append("HarqNAck; ");
+        kpiCounterName.append("HarqNAckRecv; ");
         kpiCounterName.append("ContNack; ");
         kpiCounterName.append("RRCReq; ");
         kpiCounterName.append("RRCSetup; ");
@@ -135,8 +135,8 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("UEInfRsp; ");
         kpiCounterName.append("RRCRecfg; ");
         kpiCounterName.append("RRCRecfgCompl; ");
-        kpiCounterName.append("ULCCCH; ");
-        kpiCounterName.append("DLCCCH; ");
+        kpiCounterName.append("RRCReestabCompl; ");
+        kpiCounterName.append("RRCReestab; ");
         kpiCounterName.append("ULDCCH; ");
         kpiCounterName.append("DLDCCH; ");
         kpiCounterName.append("HarqDTX; ");
@@ -300,10 +300,8 @@ void KpiWorker::displayCounter(void* counter) {
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
 
-    if (VERSION == m_targetVersion) {
-        printf("Version: %d\n", VERSION);
-        printf("-------------\n");
-    }
+    printf("Version: %d\n", VERSION);
+    printf("-------------\n");
     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
     if (m_udpSocket) {
         printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
@@ -328,10 +326,14 @@ void KpiWorker::displayCounter(void* counter) {
     varLength = sprintf(dispChar + sumLength, "CRC Correct     %10d  %8d\n", accumulateCounter->crcValid, deltaCounter->crcValid);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "CRC Error       %10d  %8d\n", accumulateCounter->crcError, deltaCounter->crcError);
+    sumLength += varLength;    
+    varLength = sprintf(dispChar + sumLength, "HARQ ACK Sent   %10d  %8d\n", accumulateCounter->harqAckSent, deltaCounter->harqAckSent);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ ACK        %10d  %8d\n", accumulateCounter->harqAck, deltaCounter->harqAck);
+    varLength = sprintf(dispChar + sumLength, "HARQ NACK Sent  %10d  %8d\n", accumulateCounter->harqNackSent, deltaCounter->harqNackSent);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ NACK       %10d  %8d\n", accumulateCounter->harqNack, deltaCounter->harqNack);
+    varLength = sprintf(dispChar + sumLength, "HARQ ACK Rcvd   %10d  %8d\n", accumulateCounter->harqAckRecvd, deltaCounter->harqAckRecvd);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ NACK Rcvd  %10d  %8d\n", accumulateCounter->harqNackRecvd, deltaCounter->harqNackRecvd);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "HARQ DTX        %10d  %8d\n", accumulateCounter->harqDtx, deltaCounter->harqDtx);
     sumLength += varLength;
@@ -362,14 +364,18 @@ void KpiWorker::displayCounter(void* counter) {
     float msg3DivRach = 0;
     float setupComplDivSetup = 0;
     float setupComplDivContResol = 0;
+    // float harqAckDivHarqReq = 0;
     float harqAckDivHarqInd = 0;
     float idRspDivIdReq = 0;
 
     if (accumulateCounter->rach != 0) {
         msg3DivRach = (accumulateCounter->msg3 * 100.0) / accumulateCounter->rach;
     }      
-    if (accumulateCounter->harqAck != 0) {
-        harqAckDivHarqInd = (accumulateCounter->harqAck * 100.0) / (accumulateCounter->harqAck + accumulateCounter->harqNack +  accumulateCounter->harqDtx);
+    // if (accumulateCounter->harqAckSent != 0) {
+    //     harqAckDivHarqReq = (accumulateCounter->harqAckSent * 100.0) / (accumulateCounter->harqAckSent + accumulateCounter->harqNackSent);
+    // }  
+    if (accumulateCounter->harqAckRecvd != 0) {
+        harqAckDivHarqInd = (accumulateCounter->harqAckRecvd * 100.0) / (accumulateCounter->harqAckRecvd + accumulateCounter->harqNackRecvd +  accumulateCounter->harqDtx);
     }  
     if (accumulateCounter->rrcReq != 0) {
         setupDivReq = (accumulateCounter->rrcSetup * 100.0) / accumulateCounter->rrcReq;
@@ -385,6 +391,7 @@ void KpiWorker::displayCounter(void* counter) {
     }  
 
     printf("MSG3/RACH:                 %f\n", msg3DivRach);
+    // printf("HarqAck/HarqReq:           %f\n", harqAckDivHarqReq);
     printf("HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
     printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
     printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);

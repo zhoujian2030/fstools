@@ -86,10 +86,10 @@ typedef struct {
     UInt32 msg3;
     UInt32 contResol;
     UInt32 crcValid;
-    UInt32 harqAck;
+    UInt32 harqAckRecvd;
     UInt32 msg3Expired;
     UInt32 crcError;
-    UInt32 harqNack;  // harq nack for all dl sch including contention resolution
+    UInt32 harqNackRecvd;  // harq nack for all dl sch including contention resolution
     UInt32 contNack;  // harq nack for contention resolution
     
 	UInt32 rrcReq;
@@ -108,19 +108,22 @@ typedef struct {
     UInt32 rrcReconfig;
     UInt32 rrcReconfigCompl;
 
-    UInt32 ulCCCH;
-    UInt32 dlCCCH;
+    UInt32 rrcReestabCompl;
+    UInt32 rrcReestab;
     UInt32 ulDCCH;
     UInt32 dlDCCH;
-
+    
     UInt32 harqDtx;
-    UInt32 harqOther; 
+    UInt32 harqOther;
     
     UInt32 maxActiveMacUe;
     UInt32 activeRlcUe;
     UInt32 maxActiveRlcUe;
     UInt32 activePdcpUe;
     UInt32 maxActivePdcpUe;
+
+    UInt32 harqAckSent;
+    UInt32 harqNackSent;
 } LteCounter;
 
 typedef struct {
