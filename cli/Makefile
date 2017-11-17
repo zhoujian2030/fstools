@@ -8,7 +8,7 @@ DEPDIR = dep
 BINDIR = bin
 # Libraries
 
-INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/qmss/inc
+INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/qmss/inc
 LIBS = $(PROJBASE)/qmss/lib/libqmss.a
 
 # Files and folders

@@ -13,7 +13,9 @@
 
 using namespace cm;
 using namespace kpi;
+#ifdef USE_UDP
 using namespace net;
+#endif
 using namespace std;
 
 #define VERSION         1003
@@ -34,23 +36,27 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
     m_writeOption = gWriteOption;
     m_period = gPeriod;
 
-    m_udpSocket = 0;
     m_file = 0;
 
     m_targetVersion = VERSION;
 
+#ifdef USE_UDP
+    m_udpSocket = 0;
     if (m_writeOption == 2) {
         m_udpSocket = new UdpSocket();
         m_kpiServerAddress.port = gServerPort;
         Socket::getSockaddrByIpAndPort(&m_kpiServerAddress.addr, gServerIp, gServerPort);
     }
+    m_sendToServerFlag = false;
+#endif
 
     if (m_writeOption == 1 || m_writeOption == 3) {
         // char currPath[256];
         // getcwd(currPath, 256);
         // LOG_DBG(KPI_LOGGER_NAME, "[%s], Current path: %s\n", __func__, currPath);
 #ifndef GSM
-        m_filename.append("/mnt/user2/lte_kpi_");
+        m_filename = gKpiDirectory;
+        m_filename.append("/lte_kpi_");
 #else
         m_filename.append("/flash/appsys/common/gsm_kpi_");     
 #endif   
@@ -59,7 +65,7 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
         time(&timep);   
         p = localtime(&timep);
         char dateStr[32];
-        sprintf(dateStr, "%04d-%02d-%02d_%02d-%02d-%02d", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+        sprintf(dateStr, "%04d-%02d-%02d_%02d-%02d-%02d", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday, (p->tm_hour), p->tm_min, p->tm_sec); 
         m_filename.append(dateStr);
         m_filename.append(".txt");
 
@@ -82,16 +88,15 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 #endif
 
     m_index = 0;
-
-    m_sendToServerFlag = false;
 }
 
 // ----------------------------------------
 KpiWorker::~KpiWorker() {
+#ifdef USE_UDP
     if (m_writeOption == 2) {
         delete m_udpSocket;
     }
-
+#endif
     if (m_writeOption == 1) {
         delete m_file;
     }
@@ -104,14 +109,17 @@ KpiWorker::~KpiWorker() {
 // ----------------------------------------
 unsigned long KpiWorker::run() {
     LOG_DBG(KPI_LOGGER_NAME, "[%s], KpiWorker running\n", __func__);
-    
+#ifdef USE_UDP
     if ((m_udpSocket != 0) || (m_file != 0)) {
+#else 
+    if (m_file != 0) {
+#endif
         std::string kpiCounterName;
         kpiCounterName.append("NO.; ");
 #ifndef GSM
         kpiCounterName.append("ActiveUe; ");
         kpiCounterName.append("RACH; ");
-        kpiCounterName.append("RAR; ");
+        kpiCounterName.append("MSG2; ");
         kpiCounterName.append("MSG3; ");
         kpiCounterName.append("ContResl; ");
         kpiCounterName.append("CrcValid; ");
@@ -141,6 +149,13 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("DLDCCH; ");
         kpiCounterName.append("HarqDTX; ");
         kpiCounterName.append("HarqOther; ");
+        kpiCounterName.append("MaxActiveMacUe; ");
+        kpiCounterName.append("ActiveRlcUe; ");
+        kpiCounterName.append("MaxActiveRlcUe; ");
+        kpiCounterName.append("ActivePdcpUe; ");
+        kpiCounterName.append("MaxActivePdcpUe; ");
+        kpiCounterName.append("HarqAckSent; ");
+        kpiCounterName.append("HarqNackSent; ");
 #else 
         kpiCounterName.append("ChannReq; ");
         kpiCounterName.append("ImmediaAssign; ");
@@ -157,6 +172,7 @@ unsigned long KpiWorker::run() {
 #endif
         kpiCounterName.append("\n");
 
+#ifdef USE_UDP
         if (m_udpSocket) {
             if (-1 == m_udpSocket->send(kpiCounterName.c_str(), kpiCounterName.size() + 1, m_kpiServerAddress)) {
                 m_sendToServerFlag = false;
@@ -164,6 +180,7 @@ unsigned long KpiWorker::run() {
                 m_sendToServerFlag = true;
             }
         }
+#endif 
 
         if (m_file) {
             int writeBytes = 0;
@@ -235,11 +252,13 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         singleLen = sprintf(kpiChar + totalLen, "\n");
         totalLen += singleLen;
 
+#ifdef USE_UDP
         if (m_udpSocket) {
             // send to kpi receiver
             LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
             m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);   
         } 
+#endif 
 
         if (m_file) {
             int writeBytes = 0;
@@ -303,9 +322,11 @@ void KpiWorker::displayCounter(void* counter) {
     printf("Version: %d\n", VERSION);
     printf("-------------\n");
     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+#ifdef USE_UDP
     if (m_udpSocket) {
         printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
     }
+#endif
     if (m_file) {
         printf("File name: %s\n", m_filename.c_str());
     }
@@ -316,6 +337,8 @@ void KpiWorker::displayCounter(void* counter) {
     // varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
     // sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "MSG2            %10d  %8d\n", accumulateCounter->rar, deltaCounter->rar);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "MSG3            %10d  %8d\n", accumulateCounter->msg3, deltaCounter->msg3);
     sumLength += varLength;
@@ -415,6 +438,10 @@ void KpiWorker::displayCounter(void* counter) {
         printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
         printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
         printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+    }
+
+    if (gShowPhyKpi) {
+        system("sh /mnt/user2/getPhyKpi.sh");
     }
 
     if (VERSION != m_targetVersion) {

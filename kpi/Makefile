@@ -8,15 +8,16 @@ DEPDIR = dep
 BINDIR = bin
 # Libraries
 
-INC += -I$(PROJBASE)/cm/include -I$(PROJBASE)/net/include -I$(PROJBASE)/qmss/inc
-LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/net/lib/libnet_arm.a $(PROJBASE)/cm/lib/libcm_arm.a 
+INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/net/include -I$(PROJBASE)/qmss/inc
+#$(PROJBASE)/net/lib/libnet_arm.a 
+LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/cm/lib/libcm_arm.a 
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX -UKPI_L3 -UGSM
+CFLAGS += -DOS_LINUX -UKPI_L3 -UGSM -UUSE_UDP
 
 all: $(TARGET)
 

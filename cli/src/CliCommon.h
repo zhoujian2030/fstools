@@ -21,8 +21,12 @@ typedef enum {
 } TARGET_TYPE;
 
 #define SUB_TGT_TYPE_LOG_LVL_NAME "LOGLEVEL"
+#define SUB_TGT_TYPE_RAT2_TYPE_NAME "RAT2TYPE"
+#define SUB_TGT_TYPE_RACH_THR_NAME "RACHTHR"
 typedef enum {
-    SUB_TGT_LOG_LEVEL = 1
+    SUB_TGT_LOG_LEVEL = 1,
+    SUB_TGT_RAT2_TYPE = 2,
+    SUB_TGT_RACH_THR = 3
 } SUB_TARGET_TYPE;
 
 #define TRACE_NAME "TRACE"
@@ -37,6 +41,13 @@ typedef enum {
     WARNING = 3,
     ERROR = 4
 } L2LogLevel;
+
+#define DISTRIBUTED_NAME "DISTRIBUTED"
+#define LOCALIZED_NAME "LOCALIZED"
+typedef enum {
+    DISTRIBUTED = 0,
+    LOCALIZED = 1
+} RAT2Type;
 
 
 #endif

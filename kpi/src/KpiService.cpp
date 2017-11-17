@@ -14,7 +14,7 @@
 #include "Qmss.h"
 
 using namespace kpi;
-using namespace net;
+//using namespace net;
 using namespace cm;
 
 #ifdef KPI_L3

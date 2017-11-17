@@ -13,7 +13,9 @@
 #include "Qmss.h"
 #endif
 #include "MacInterface.h"
+#if (defined USE_UDP) || (defined KPI_L3)
 #include "UdpSocket.h"
+#endif
 #include "File.h"
 #include <string>
 
@@ -53,13 +55,14 @@ namespace kpi {
         UInt32 m_period;
         int m_writeOption;
 
+#ifdef USE_UDP
         net::UdpSocket* m_udpSocket;
         net::Socket::InetAddressPort m_kpiServerAddress;
-
+        bool m_sendToServerFlag;
+#endif
         cm::File* m_file;
         std::string m_filename;
 
-        bool m_sendToServerFlag;
     };
 }
 

@@ -1,4 +1,5 @@
 SUBDIRS = qmss \
+	cm \
 	kpi \
 	cli \
 	tst

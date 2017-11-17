@@ -17,6 +17,7 @@
 #include "Qmss.h"
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 
 using namespace std;
 using namespace cli;
@@ -81,6 +82,34 @@ bool CommandParser::send(Qmss* qmss) {
                 LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET log level yet\n", __func__);
                 return false;
             }
+        } else if ((m_tgtType == TGT_L2) && (m_subTgtType == SUB_TGT_RAT2_TYPE)) {
+            if ((m_cmdType == SET)) {
+                msg->msgId = htons(MAC_CLI_SET_COMM_CHAN_RAT2);
+                length += sizeof(SetRAT2Type);
+                msg->length = htons(length);
+                SetRAT2Type* rat2TypeReq = (SetRAT2Type*)msg->msgBody;
+                int* value = (int*)m_cmdContent;
+                rat2TypeReq->value = *value;
+                cout << "Set Common Channel RAT2 Type: " << *value << endl; 
+            } else {
+                showUsage();
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET RAT2 Type yet\n", __func__);
+                return false;
+            }
+        } else if ((m_tgtType == TGT_L2) && (m_subTgtType == SUB_TGT_RACH_THR)) {
+            if ((m_cmdType == SET)) {
+                msg->msgId = htons(MAC_CLI_SET_RACH_THRESTHOLD);
+                length += sizeof(UInt32);
+                msg->length = htons(length);
+                UInt32* rachThr = (UInt32*)msg->msgBody;
+                int* value = (int*)m_cmdContent;
+                *rachThr = *value;
+                cout << "Set Rach Thresthold: " << *value << endl; 
+            } else {
+                showUsage();
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support Rach Thresthold yet\n", __func__);
+                return false;
+            }
         } else {
             showUsage();
             LOG_DBG(CLI_LOGGER_NAME, "[%s], unsupported command parameters\n", __func__);
@@ -94,6 +123,17 @@ bool CommandParser::send(Qmss* qmss) {
         LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid command\n", __func__);
         return false;
     }
+}
+
+int CommandParser::s2i(string theString) {
+    int result;
+    stringstream ss;
+    ss << theString;
+    ss >> result;
+
+    // TODO check if success, handle the exception
+
+    return result;
 }
 
 // ---------------------------------------
@@ -120,13 +160,17 @@ bool CommandParser::parseParam(std::string option, int index) {
     } else if (index == 3) {
         if (option.compare(SUB_TGT_TYPE_LOG_LVL_NAME) == 0) {
             m_subTgtType = SUB_TGT_LOG_LEVEL;
+        } else if (option.compare(SUB_TGT_TYPE_RAT2_TYPE_NAME) == 0) {
+            m_subTgtType = SUB_TGT_RAT2_TYPE;
+        } else if (option.compare(SUB_TGT_TYPE_RACH_THR_NAME) == 0) {
+            m_subTgtType = SUB_TGT_RACH_THR;
         } else {
             LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
             return false;
         }
     } else if (index == 4) {
-        int* logLevel = (int*)m_cmdContent;
         if (m_subTgtType == SUB_TGT_LOG_LEVEL) {
+            int* logLevel = (int*)m_cmdContent;
             if (option.compare(TRACE_NAME) == 0) {
                 *logLevel = TRACE;
                 m_isValid = true;
@@ -146,6 +190,22 @@ bool CommandParser::parseParam(std::string option, int index) {
                 LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
                 return false;
             }
+        } else if (m_subTgtType == SUB_TGT_RAT2_TYPE) {
+            int* rat2Type = (int*)m_cmdContent;
+            if (option.compare(DISTRIBUTED_NAME) == 0) {
+                *rat2Type = DISTRIBUTED;
+                m_isValid = true;
+            } else if (option.compare(LOCALIZED_NAME) == 0) {
+                *rat2Type = LOCALIZED;
+                m_isValid = true; 
+            } else {
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
+                return false;
+            }
+        } else if (m_subTgtType == SUB_TGT_RACH_THR) {
+            int* rachThr = (int*)m_cmdContent;
+            *rachThr = s2i(option);
+            m_isValid = true;
         }
     } else {
         return false;
@@ -167,4 +227,6 @@ void CommandParser::showUsage() {
 
     cout << "Example: " << endl;
     cout << "  cli set l2 loglevel [trace/debug/info/warning/error]" << endl;    
+    cout << "  cli set l2 rat2type [distributed/localized]" << endl; 
+    cout << "  cli set l2 rachthr  [1, 2, 3, ...]" << endl; 
 }

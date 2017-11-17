@@ -38,6 +38,7 @@ namespace cli {
 
         void showUsage();
         bool parseParam(std::string option, int index);
+        int s2i(std::string theString);
     };
 
 }

@@ -9,6 +9,8 @@ extern std::string gServerIp;
 extern unsigned short gServerPort;
 extern int gPeriod;
 extern bool gShowAll;
+extern bool gShowPhyKpi;
+extern std::string gKpiDirectory;
 
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
 #define MAC_RECV_MSG_BUFFER_LENGTH 2048
@@ -37,7 +39,9 @@ typedef enum {
 } KPIReqAPI;
 
 typedef enum {
-    MAC_CLI_SET_LOG_LEVEL_REQ = 0x01
+    MAC_CLI_SET_LOG_LEVEL_REQ = 0x01,
+    MAC_CLI_SET_COMM_CHAN_RAT2 = 0x02,
+    MAC_CLI_SET_RACH_THRESTHOLD = 0x03
 } CLIReqAPI;
 
 #define LTE_MSG_HEAD_LENGTH 12
@@ -78,6 +82,10 @@ typedef struct S_L3MacCfgRsp
 typedef struct {
     UInt32 logLevel;
 } SetLogLevelReq;
+
+typedef struct {
+	UInt32 value;
+} SetRAT2Type;
 
 typedef struct {	
     UInt32 activeUe;

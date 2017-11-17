@@ -6,6 +6,9 @@ AR = arm-linux-ar
 # For debug load, DON'T define NDEBUG 
 #CFLAGS = -Wall -g -O2 -DNDEBUG -fPIC
 CFLAGS = -Wall -g -O2 -fPIC
+ifeq ($(PLATFORM), arm)
+CFLAGS = -Wall -g -Os -fPIC
+endif
 
 LFLAGS = -lrt
 
