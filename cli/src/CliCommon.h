@@ -16,8 +16,10 @@ typedef enum {
 } CliCmdType;
 
 #define TGT_TYPE_L2_NAME "L2"
+#define TGT_TYPE_SIM_NAME "SIM"
 typedef enum {
-    TGT_L2 = 1
+    TGT_L2 = 1,
+    TGT_SIM = 2
 } TARGET_TYPE;
 
 #define SUB_TGT_TYPE_LOG_LVL_NAME "LOGLEVEL"

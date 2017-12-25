@@ -27,6 +27,8 @@ CommandParser::CommandParser()
 : m_isValid(false), m_cmdType(0), m_tgtType(0), m_subTgtType(0)
 {
     memset((void*)m_cmdContent, 0, MAX_COMMAND_CONTENT_LENGTH);
+    m_numUe = 1;
+    m_numTestTime = 1;
 }
 
 // ---------------------------------------
@@ -65,58 +67,72 @@ bool CommandParser::send(Qmss* qmss) {
         LteMacMsg* msg = (LteMacMsg*)m_sendBuffer;
         msg->transactionId = htons(1111);
         msg->srcModuleId =  htons(CLI_MODULE_ID);
-        msg->dstModuleId =  htons(MAC_MODULE_ID);
         int length = LTE_MSG_HEAD_LENGTH;
 
-        if ((m_tgtType == TGT_L2) && (m_subTgtType == SUB_TGT_LOG_LEVEL)) {
-            if ((m_cmdType == SET)) {
-                msg->msgId = htons(MAC_CLI_SET_LOG_LEVEL_REQ);
-                length += sizeof(SetLogLevelReq);
-                msg->length = htons(length);
-                SetLogLevelReq* logLevelReq = (SetLogLevelReq*)msg->msgBody;
-                int* logLevel = (int*)m_cmdContent;
-                logLevelReq->logLevel = *logLevel;
-                cout << "Set L2 loglevel to " << *logLevel << endl; 
+        if (m_tgtType == TGT_L2) {
+            msg->dstModuleId =  htons(MAC_MODULE_ID);
+            if (m_subTgtType == SUB_TGT_LOG_LEVEL) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(MAC_CLI_SET_LOG_LEVEL_REQ);
+                    length += sizeof(SetLogLevelReq);
+                    msg->length = htons(length);
+                    SetLogLevelReq* logLevelReq = (SetLogLevelReq*)msg->msgBody;
+                    int* logLevel = (int*)m_cmdContent;
+                    logLevelReq->logLevel = *logLevel;
+                    cout << "Set L2 loglevel to " << *logLevel << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET log level yet\n", __func__);
+                    return false;
+                }
+            } else if (m_subTgtType == SUB_TGT_RAT2_TYPE) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(MAC_CLI_SET_COMM_CHAN_RAT2);
+                    length += sizeof(SetRAT2Type);
+                    msg->length = htons(length);
+                    SetRAT2Type* rat2TypeReq = (SetRAT2Type*)msg->msgBody;
+                    int* value = (int*)m_cmdContent;
+                    rat2TypeReq->value = *value;
+                    cout << "Set Common Channel RAT2 Type: " << *value << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET RAT2 Type yet\n", __func__);
+                    return false;
+                }
+            } else if (m_subTgtType == SUB_TGT_RACH_THR) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(MAC_CLI_SET_RACH_THRESTHOLD);
+                    length += sizeof(UInt32);
+                    msg->length = htons(length);
+                    UInt32* rachThr = (UInt32*)msg->msgBody;
+                    int* value = (int*)m_cmdContent;
+                    *rachThr = *value;
+                    cout << "Set Rach Thresthold: " << *value << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support Rach Thresthold yet\n", __func__);
+                    return false;
+                }
             } else {
                 showUsage();
-                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET log level yet\n", __func__);
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], unsupported command parameters\n", __func__);
                 return false;
-            }
-        } else if ((m_tgtType == TGT_L2) && (m_subTgtType == SUB_TGT_RAT2_TYPE)) {
-            if ((m_cmdType == SET)) {
-                msg->msgId = htons(MAC_CLI_SET_COMM_CHAN_RAT2);
-                length += sizeof(SetRAT2Type);
-                msg->length = htons(length);
-                SetRAT2Type* rat2TypeReq = (SetRAT2Type*)msg->msgBody;
-                int* value = (int*)m_cmdContent;
-                rat2TypeReq->value = *value;
-                cout << "Set Common Channel RAT2 Type: " << *value << endl; 
-            } else {
-                showUsage();
-                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET RAT2 Type yet\n", __func__);
-                return false;
-            }
-        } else if ((m_tgtType == TGT_L2) && (m_subTgtType == SUB_TGT_RACH_THR)) {
-            if ((m_cmdType == SET)) {
-                msg->msgId = htons(MAC_CLI_SET_RACH_THRESTHOLD);
-                length += sizeof(UInt32);
-                msg->length = htons(length);
-                UInt32* rachThr = (UInt32*)msg->msgBody;
-                int* value = (int*)m_cmdContent;
-                *rachThr = *value;
-                cout << "Set Rach Thresthold: " << *value << endl; 
-            } else {
-                showUsage();
-                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support Rach Thresthold yet\n", __func__);
-                return false;
-            }
-        } else {
-            showUsage();
-            LOG_DBG(CLI_LOGGER_NAME, "[%s], unsupported command parameters\n", __func__);
-            return false;
-        }    
+            }    
+            qmss->send(m_sendBuffer, length);
+        } else if (m_tgtType == TGT_SIM) {
+            msg->dstModuleId =  htons(SIM_MODULE_ID);
+            msg->msgId = htons(SIM_CLI_SET_PARAM_REQ);
+            length += sizeof(SetSIMParamReq);
+            msg->length = htons(length);
+            SetSIMParamReq* simParamReq = (SetSIMParamReq*)msg->msgBody;
+            simParamReq->numUe = m_numUe;
+            simParamReq->numTestTime = m_numTestTime;
+            cout << "Set SIM UE number: " << m_numUe << ", Test Time: " << m_numTestTime << endl; 
 
-        qmss->send(m_sendBuffer, length);
+            qmss->updateDstQmssId(Qmss::QID_TST_SEND_START_TEST);
+            qmss->send(m_sendBuffer, length);
+        }
+
         return true;
     } else {
         showUsage();
@@ -153,6 +169,9 @@ bool CommandParser::parseParam(std::string option, int index) {
     } else if (index == 2) {
         if (option.compare(TGT_TYPE_L2_NAME) == 0) {
             m_tgtType = TGT_L2;
+        } else if (option.compare(TGT_TYPE_SIM_NAME) == 0) {
+            m_tgtType = TGT_SIM;
+            m_isValid = true;
         } else {
             LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
             return false;
@@ -165,8 +184,12 @@ bool CommandParser::parseParam(std::string option, int index) {
         } else if (option.compare(SUB_TGT_TYPE_RACH_THR_NAME) == 0) {
             m_subTgtType = SUB_TGT_RACH_THR;
         } else {
-            LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
-            return false;
+            if (m_tgtType == TGT_SIM) {
+                m_numUe = s2i(option);
+            } else {
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
+                return false;
+            }
         }
     } else if (index == 4) {
         if (m_subTgtType == SUB_TGT_LOG_LEVEL) {
@@ -205,6 +228,9 @@ bool CommandParser::parseParam(std::string option, int index) {
         } else if (m_subTgtType == SUB_TGT_RACH_THR) {
             int* rachThr = (int*)m_cmdContent;
             *rachThr = s2i(option);
+            m_isValid = true;
+        } else if (m_tgtType == TGT_SIM) {
+            m_numTestTime = s2i(option);
             m_isValid = true;
         }
     } else {

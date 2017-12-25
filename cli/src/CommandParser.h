@@ -36,6 +36,10 @@ namespace cli {
 
         char m_sendBuffer[MAX_COMMAND_CONTENT_LENGTH];
 
+        // for TEST command
+        int m_numUe;
+        int m_numTestTime;
+        
         void showUsage();
         bool parseParam(std::string option, int index);
         int s2i(std::string theString);

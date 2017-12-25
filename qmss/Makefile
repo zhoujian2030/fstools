@@ -9,7 +9,7 @@ INCDIR = inc
 LIBDIR = lib
 # Libraries
 
-INC += -I$(PROJBASE)/cm/include
+INC += -I$(PROJBASE)/cm/inc
 LIBS = $(PROJBASE)/cm/lib/libnetcp.a
 
 # Files and folders

@@ -28,6 +28,8 @@ public:
         QID_INVALID_ID
     };
 
+    void updateDstQmssId(int sendQId);
+
     int send(char* msgBuffer, int length);
     int recv(char* msgBuffer);
     int count();

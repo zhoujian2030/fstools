@@ -30,6 +30,11 @@ void Qmss::initQmss() {
 }
 
 // --------------------------------------
+void Qmss::updateDstQmssId(int sendQId) {
+    m_sendQId = (Qmss_HANDLE)sendQId;
+}
+
+// --------------------------------------
 int Qmss::send(char* msgBuffer, int length) {
     return Qmss_SendData(m_sendQId, (void*)msgBuffer, length);
 }

@@ -23,6 +23,7 @@ typedef unsigned char UInt8;
 // module id
 #define KPI_MODULE_ID            0x9901
 #define CLI_MODULE_ID            0x9902
+#define SIM_MODULE_ID            0x9903
 #define MAC_MODULE_ID            7
 #define RRC_MODULE_ID            3 
 #define RLC_MODULE_ID            6
@@ -41,7 +42,9 @@ typedef enum {
 typedef enum {
     MAC_CLI_SET_LOG_LEVEL_REQ = 0x01,
     MAC_CLI_SET_COMM_CHAN_RAT2 = 0x02,
-    MAC_CLI_SET_RACH_THRESTHOLD = 0x03
+    MAC_CLI_SET_RACH_THRESTHOLD = 0x03,
+
+    SIM_CLI_SET_PARAM_REQ = 0x11
 } CLIReqAPI;
 
 #define LTE_MSG_HEAD_LENGTH 12
@@ -86,6 +89,11 @@ typedef struct {
 typedef struct {
 	UInt32 value;
 } SetRAT2Type;
+
+typedef struct {
+    UInt32 numUe;
+    UInt32 numTestTime;
+} SetSIMParamReq;
 
 typedef struct {	
     UInt32 activeUe;

@@ -63,6 +63,8 @@ namespace kpi {
         cm::File* m_file;
         std::string m_filename;
 
+        cm::File* m_resultFile;
+        std::string m_resultFilename;
     };
 }
 

@@ -13,11 +13,11 @@
 using namespace kpi;
 using namespace std;
 
-int gWriteOption = 0;
+int gWriteOption = 4; 
 string gServerIp = "192.168.1.166";
 unsigned short gServerPort = 50001;
 int gPeriod = 10000;
-string gKpiDirectory = ".";
+string gKpiDirectory = "/OAM";
 
 UInt8 gLogLevel = 2;
 bool gShowAll = false;

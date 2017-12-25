@@ -1,5 +1,5 @@
-SUBDIRS = qmss \
-	cm \
+SUBDIRS = cm \
+	qmss \
 	kpi \
 	cli \
 	tst

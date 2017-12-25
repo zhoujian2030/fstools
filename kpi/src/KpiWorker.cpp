@@ -50,7 +50,7 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
     m_sendToServerFlag = false;
 #endif
 
-    if (m_writeOption == 1 || m_writeOption == 3) {
+    if (m_writeOption == 1 || m_writeOption == 3 || m_writeOption == 4) {
         // char currPath[256];
         // getcwd(currPath, 256);
         // LOG_DBG(KPI_LOGGER_NAME, "[%s], Current path: %s\n", __func__, currPath);
@@ -71,6 +71,12 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
 
         m_file = new File(m_filename, FILE_CREATE, FILE_WRITE_ONLY);
         LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_filename.c_str());
+    } 
+    
+    if (m_writeOption == 4) {
+        m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
+        m_resultFile = new File(m_resultFilename, FILE_CREATE, FILE_WRITE_ONLY);
+        LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_resultFilename.c_str());
     }
 
 #ifndef GSM 
@@ -265,7 +271,7 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             m_file->write((const char*)kpiChar, totalLen, writeBytes);
         }
         
-        if (gWriteOption < 3) {
+        if ((gWriteOption < 3) || (gWriteOption == 4)) {
             //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
             displayCounter(m_recvBuffer);
         }
@@ -314,24 +320,45 @@ void KpiWorker::displayCounter(void* counter) {
     GSMCounter* accumulateCounter = (GSMCounter*)m_prevKpiArray;
     GSMCounter* deltaCounter = (GSMCounter*)m_deltaKpiArray;
 #endif
-    char dispChar[2048];
+    char dispChar[4096];
     int sumLength = 0;
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
 
-    printf("Version: %d\n", VERSION);
-    printf("-------------\n");
-    printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+    varLength = sprintf(dispChar + sumLength, "Version: %d\n", VERSION);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "-------------\n");
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+    sumLength += varLength;
 #ifdef USE_UDP
     if (m_udpSocket) {
-        printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+        varLength = sprintf(dispChar + sumLength, "KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+        sumLength += varLength;
     }
 #endif
     if (m_file) {
-        printf("File name: %s\n", m_filename.c_str());
-    }
-    printf("Name            Accumulate  Delta(%ds)\n", m_period/1000);
-    printf("--------------------------------------\n");
+        varLength = sprintf(dispChar + sumLength, "File name: %s\n", m_filename.c_str());
+        sumLength += varLength;
+    }    
+    varLength = sprintf(dispChar + sumLength, "Name            Accumulate  Delta(%ds)\n", m_period/1000);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");
+    sumLength += varLength;
+
+//     printf("Version: %d\n", VERSION);
+//     printf("-------------\n");
+//     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
+// #ifdef USE_UDP
+//     if (m_udpSocket) {
+//         printf("KPI Server: %s:%d (Status: %s)\n", gServerIp.c_str(), gServerPort, m_sendToServerFlag ? "Active" : "Inactive");
+//     }
+// #endif
+//     if (m_file) {
+//         printf("File name: %s\n", m_filename.c_str());
+//     }
+//     printf("Name            Accumulate  Delta(%ds)\n", m_period/1000);
+//     printf("--------------------------------------\n");
 
 #ifndef GSM
     // varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
@@ -381,7 +408,7 @@ void KpiWorker::displayCounter(void* counter) {
     varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
     sumLength += varLength;
 
-    printf("%s\n", dispChar);
+    // printf("%s\n", dispChar);
 
     float setupDivReq = 0;
     float msg3DivRach = 0;
@@ -413,40 +440,79 @@ void KpiWorker::displayCounter(void* counter) {
         idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
     }  
 
-    printf("MSG3/RACH:                 %f\n", msg3DivRach);
-    // printf("HarqAck/HarqReq:           %f\n", harqAckDivHarqReq);
-    printf("HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
-    printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
-    printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
-    printf("RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
-    printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);    
+    varLength = sprintf(dispChar + sumLength, "\n");
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "MSG3/RACH:                 %f\n", msg3DivRach);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RrcSetup/RrcReq:           %f\n", setupDivReq);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
+    sumLength += varLength;
+
+    // printf("MSG3/RACH:                 %f\n", msg3DivRach);
+    // // printf("HarqAck/HarqReq:           %f\n", harqAckDivHarqReq);
+    // printf("HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
+    // printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
+    // printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
+    // printf("RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
+    // printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);    
        
-    if (gShowAll) {
+    if (gShowAll || (m_writeOption == 4)) {
         static UInt8 count = 0;
         static UInt32 maxIdResp = 0;
         if (count > 2) {
             if (maxIdResp < deltaCounter->identityResp) {
                 maxIdResp = deltaCounter->identityResp;
             }
-            printf("\n");
-            printf("Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
+            varLength = sprintf(dispChar + sumLength, "\n");
+            sumLength += varLength;
+            varLength = sprintf(dispChar + sumLength, "Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
+            sumLength += varLength;
+            // printf("\n");
+            // printf("Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
         } else {
             count++;
         }
 
-        printf("\n");
-        printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
-        printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
-        printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+        varLength = sprintf(dispChar + sumLength, "\n");
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+        sumLength += varLength;
+        // printf("\n");
+        // printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
+        // printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
+        // printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+    }
+
+    if (VERSION != m_targetVersion) {
+        varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
+        sumLength += varLength;
+        // printf("--------------------------------------\n");
+        // printf("NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
+    }
+
+    if (m_writeOption == 4) {
+        int writeBytes = 0;
+        m_resultFile->seek(F_SEEK_BEGIN);
+        m_resultFile->write(dispChar, sumLength, writeBytes);
+    } else {
+        printf("%s\n", dispChar);
     }
 
     if (gShowPhyKpi) {
         system("sh /mnt/user2/getPhyKpi.sh");
-    }
-
-    if (VERSION != m_targetVersion) {
-        printf("--------------------------------------\n");
-        printf("NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
     }
 #else 
     varLength = sprintf(dispChar + sumLength, "Channel Req     %10d  %8d\n", accumulateCounter->channelReq, deltaCounter->channelReq);
