@@ -1,4 +1,5 @@
 SUBDIRS = cm \
+	net \
 	qmss \
 	kpi \
 	cli \

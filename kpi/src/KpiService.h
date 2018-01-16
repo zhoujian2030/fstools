@@ -11,7 +11,7 @@
 #include "Service.h"
 #if (defined USE_UDP) || (defined KPI_L3)
 #include "UdpSocket.h"
-#include "SelectSocketSet.h"
+// #include "SelectSocketSet.h"
 #endif
 #include "EventIndicator.h"
 #include "MacInterface.h"

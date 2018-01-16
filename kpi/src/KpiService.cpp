@@ -14,7 +14,9 @@
 #include "Qmss.h"
 
 using namespace kpi;
-//using namespace net;
+#if (defined USE_UDP) || (defined KPI_L3)
+using namespace net;
+#endif
 using namespace cm;
 
 #ifdef KPI_L3
@@ -88,7 +90,7 @@ int KpiService::sendMacKpiReq() {
     msg->dstModuleId =  htons(RRC_MODULE_ID);
     msg->msgId = htons(RRC_KPI_REQ);
     LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to RRC, msg length = %d\n", __func__, length);
-    m_udpServerSocket->send(m_sendBuffer, length, m_rrcAddress);
+    return m_udpServerSocket->send(m_sendBuffer, length, m_rrcAddress);
 #else
     msg->dstModuleId =  htons(MAC_MODULE_ID);
     msg->msgId = htons(MAC_KPI_REQ);

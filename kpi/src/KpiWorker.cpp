@@ -13,7 +13,7 @@
 
 using namespace cm;
 using namespace kpi;
-#ifdef USE_UDP
+#if (defined USE_UDP) || (defined KPI_L3)
 using namespace net;
 #endif
 using namespace std;
@@ -74,7 +74,11 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
     } 
     
     if (m_writeOption == 4) {
+#ifdef KPI_L3
+        m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
+#else
         m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
+#endif
         m_resultFile = new File(m_resultFilename, FILE_CREATE, FILE_WRITE_ONLY);
         LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_resultFilename.c_str());
     }
@@ -153,6 +157,7 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("RRCReestab; ");
         kpiCounterName.append("ULDCCH; ");
         kpiCounterName.append("DLDCCH; ");
+#ifndef KPI_L3
         kpiCounterName.append("HarqDTX; ");
         kpiCounterName.append("HarqOther; ");
         kpiCounterName.append("MaxActiveMacUe; ");
@@ -162,6 +167,7 @@ unsigned long KpiWorker::run() {
         kpiCounterName.append("MaxActivePdcpUe; ");
         kpiCounterName.append("HarqAckSent; ");
         kpiCounterName.append("HarqNackSent; ");
+#endif
 #else 
         kpiCounterName.append("ChannReq; ");
         kpiCounterName.append("ImmediaAssign; ");
@@ -226,6 +232,7 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
     int singleLen = 0;
 
     UInt32* kpiValArray = (UInt32*)m_recvBuffer;
+#ifndef KPI_L3
     m_targetVersion = *kpiValArray;
     if (m_targetVersion < VERSION) {
         system("clear");
@@ -239,6 +246,9 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
     kpiValArray++;
 
     UInt32 numKpi = (length - VERSION_LEN) / sizeof(UInt32);
+#else 
+    UInt32 numKpi = length / sizeof(UInt32);
+#endif
     if (numKpi >= m_numKpiCounter) {
         m_index++;
         singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
@@ -305,7 +315,9 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
 }
 
 void KpiWorker::displayCounter(void* counter) {
-    system("clear");
+    if (gWriteOption == 4) {
+        system("clear");
+    }
 
     time_t timep;   
     struct tm *p; 
@@ -325,11 +337,11 @@ void KpiWorker::displayCounter(void* counter) {
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
 
-    varLength = sprintf(dispChar + sumLength, "Version: %d\n", VERSION);
+    varLength = sprintf(dispChar + sumLength, "Version: %d | ", VERSION);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "-------------\n");
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
+    // varLength = sprintf(dispChar + sumLength, "-------------\n");
+    // sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "Date: %04d-%02d-%02d %02d:%02d:%02d | ", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
     sumLength += varLength;
 #ifdef USE_UDP
     if (m_udpSocket) {
@@ -338,7 +350,7 @@ void KpiWorker::displayCounter(void* counter) {
     }
 #endif
     if (m_file) {
-        varLength = sprintf(dispChar + sumLength, "File name: %s\n", m_filename.c_str());
+        varLength = sprintf(dispChar + sumLength, "File: %s\n", m_filename.c_str());
         sumLength += varLength;
     }    
     varLength = sprintf(dispChar + sumLength, "Name            Accumulate  Delta(%ds)\n", m_period/1000);
@@ -377,18 +389,22 @@ void KpiWorker::displayCounter(void* counter) {
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "CRC Error       %10d  %8d\n", accumulateCounter->crcError, deltaCounter->crcError);
     sumLength += varLength;    
+#ifndef KPI_L3
     varLength = sprintf(dispChar + sumLength, "HARQ ACK Sent   %10d  %8d\n", accumulateCounter->harqAckSent, deltaCounter->harqAckSent);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "HARQ NACK Sent  %10d  %8d\n", accumulateCounter->harqNackSent, deltaCounter->harqNackSent);
     sumLength += varLength;
+#endif
     varLength = sprintf(dispChar + sumLength, "HARQ ACK Rcvd   %10d  %8d\n", accumulateCounter->harqAckRecvd, deltaCounter->harqAckRecvd);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "HARQ NACK Rcvd  %10d  %8d\n", accumulateCounter->harqNackRecvd, deltaCounter->harqNackRecvd);
     sumLength += varLength;
+#ifndef KPI_L3
     varLength = sprintf(dispChar + sumLength, "HARQ DTX        %10d  %8d\n", accumulateCounter->harqDtx, deltaCounter->harqDtx);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ Other      %10d  %8d\n", accumulateCounter->harqOther, deltaCounter->harqOther);
-    sumLength += varLength;
+    // varLength = sprintf(dispChar + sumLength, "HARQ Other      %10d  %8d\n", accumulateCounter->harqOther, deltaCounter->harqOther);
+    // sumLength += varLength;
+#endif
     varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RRC Setup       %10d  %8d\n", accumulateCounter->rrcSetup, deltaCounter->rrcSetup);
@@ -425,7 +441,11 @@ void KpiWorker::displayCounter(void* counter) {
     //     harqAckDivHarqReq = (accumulateCounter->harqAckSent * 100.0) / (accumulateCounter->harqAckSent + accumulateCounter->harqNackSent);
     // }  
     if (accumulateCounter->harqAckRecvd != 0) {
+#ifndef KPI_L3
         harqAckDivHarqInd = (accumulateCounter->harqAckRecvd * 100.0) / (accumulateCounter->harqAckRecvd + accumulateCounter->harqNackRecvd +  accumulateCounter->harqDtx);
+#else
+        harqAckDivHarqInd = (accumulateCounter->harqAckRecvd * 100.0) / (accumulateCounter->harqAckRecvd + accumulateCounter->harqNackRecvd);
+#endif
     }  
     if (accumulateCounter->rrcReq != 0) {
         setupDivReq = (accumulateCounter->rrcSetup * 100.0) / accumulateCounter->rrcReq;
@@ -450,8 +470,10 @@ void KpiWorker::displayCounter(void* counter) {
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
     sumLength += varLength;
+#ifndef KPI_L3
     varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
     sumLength += varLength;
+#endif
     varLength = sprintf(dispChar + sumLength, "IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
     sumLength += varLength;
 
@@ -480,6 +502,7 @@ void KpiWorker::displayCounter(void* counter) {
             count++;
         }
 
+#ifndef KPI_L3
         varLength = sprintf(dispChar + sumLength, "\n");
         sumLength += varLength;
         varLength = sprintf(dispChar + sumLength, "ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
@@ -492,8 +515,10 @@ void KpiWorker::displayCounter(void* counter) {
         // printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
         // printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
         // printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+#endif
     }
 
+#ifndef KPI_L3
     if (VERSION != m_targetVersion) {
         varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");
         sumLength += varLength;
@@ -502,6 +527,7 @@ void KpiWorker::displayCounter(void* counter) {
         // printf("--------------------------------------\n");
         // printf("NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
     }
+#endif
 
     if (m_writeOption == 4) {
         int writeBytes = 0;

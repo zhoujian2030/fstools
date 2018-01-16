@@ -17,6 +17,7 @@
 #define KPI_LOGGER_NAME "KPI"
 #define CLI_LOGGER_NAME "CLI"
 #define CM_LOGGER_NAME "CM"
+#define NET_LOGGER_NAME "NET"
 #define FILENAME /*lint -save -e613 */( NULL == strrchr(__FILE__, '\\') ? (strrchr(__FILE__, '/')+1): strrchr(__FILE__, '\\')+1)
 #define FUNCNAME __FUNCTION__
 #define LINE     __LINE__

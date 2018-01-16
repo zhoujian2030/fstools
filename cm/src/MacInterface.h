@@ -129,6 +129,7 @@ typedef struct {
     UInt32 ulDCCH;
     UInt32 dlDCCH;
     
+#ifndef KPI_L3
     UInt32 harqDtx;
     UInt32 harqOther;
     
@@ -140,6 +141,7 @@ typedef struct {
 
     UInt32 harqAckSent;
     UInt32 harqNackSent;
+#endif
 } LteCounter;
 
 typedef struct {

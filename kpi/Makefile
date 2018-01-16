@@ -8,9 +8,9 @@ DEPDIR = dep
 BINDIR = bin
 # Libraries
 
-INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/net/include -I$(PROJBASE)/qmss/inc
-#$(PROJBASE)/net/lib/libnet_arm.a 
-LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/cm/lib/libcm_arm.a 
+INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/net/inc -I$(PROJBASE)/qmss/inc
+# 
+LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/net/lib/libnet_arm.a $(PROJBASE)/cm/lib/libcm_arm.a 
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
