@@ -110,7 +110,21 @@ bool CommandParser::send(Qmss* qmss) {
                     cout << "Set Rach Thresthold: " << *value << endl; 
                 } else {
                     showUsage();
-                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support Rach Thresthold yet\n", __func__);
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Rach Thresthold yet\n", __func__);
+                    return false;
+                }
+            } else if (m_subTgtType == SUB_TGT_MAX_UE_SCHED) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(MAC_CLI_SET_MAX_UE_SCHEDULED);
+                    length += sizeof(UInt32);
+                    msg->length = htons(length);
+                    UInt32* maxUeSched = (UInt32*)msg->msgBody;
+                    int* value = (int*)m_cmdContent;
+                    *maxUeSched = *value;
+                    cout << "Set Max UE scheduled: " << *value << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Max UE scheduled yet\n", __func__);
                     return false;
                 }
             } else {
@@ -183,6 +197,8 @@ bool CommandParser::parseParam(std::string option, int index) {
             m_subTgtType = SUB_TGT_RAT2_TYPE;
         } else if (option.compare(SUB_TGT_TYPE_RACH_THR_NAME) == 0) {
             m_subTgtType = SUB_TGT_RACH_THR;
+        } else if (option.compare(SUB_TGT_TYPE_MAX_UE_SCHED_NAME) == 0) {
+            m_subTgtType = SUB_TGT_MAX_UE_SCHED;
         } else {
             if (m_tgtType == TGT_SIM) {
                 m_numUe = s2i(option);
@@ -229,6 +245,10 @@ bool CommandParser::parseParam(std::string option, int index) {
             int* rachThr = (int*)m_cmdContent;
             *rachThr = s2i(option);
             m_isValid = true;
+        } else if (m_subTgtType == SUB_TGT_MAX_UE_SCHED) {
+            int* maxUeSched = (int*)m_cmdContent;
+            *maxUeSched = s2i(option);
+            m_isValid = true;
         } else if (m_tgtType == TGT_SIM) {
             m_numTestTime = s2i(option);
             m_isValid = true;
@@ -255,4 +275,5 @@ void CommandParser::showUsage() {
     cout << "  cli set l2 loglevel [trace/debug/info/warning/error]" << endl;    
     cout << "  cli set l2 rat2type [distributed/localized]" << endl; 
     cout << "  cli set l2 rachthr  [1, 2, 3, ...]" << endl; 
+    cout << "  cli set l2 maxuesched  [1, 2, 3, 4]" << endl; 
 }
