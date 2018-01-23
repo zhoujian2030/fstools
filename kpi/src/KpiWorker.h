@@ -12,7 +12,7 @@
 #ifndef KPI_L3
 #include "Qmss.h"
 #endif
-#include "MacInterface.h"
+#include "CliCommon.h"
 #if (defined USE_UDP) || (defined KPI_L3)
 #include "UdpSocket.h"
 #endif

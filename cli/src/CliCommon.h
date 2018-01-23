@@ -17,9 +17,11 @@ typedef enum {
 
 #define TGT_TYPE_L2_NAME "L2"
 #define TGT_TYPE_SIM_NAME "SIM"
+#define TGT_TYPE_KPI_NAME "KPI"
 typedef enum {
     TGT_L2 = 1,
-    TGT_SIM = 2
+    TGT_SIM = 2,
+    TGT_KPI = 3
 } TARGET_TYPE;
 
 #define SUB_TGT_TYPE_LOG_LVL_NAME "LOGLEVEL"

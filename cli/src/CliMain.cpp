@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "Qmss.h"
-#include "MacInterface.h"
+#include "CliCommon.h"
 #include "Util.h"
 #include "CliCommon.h"
 #include "CommandParser.h"
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     system("clear");
     CommandParser commandParser;
     commandParser.parse(argc, argv);
-    commandParser.send(qmss);
+    commandParser.execute(qmss, argc, argv);
 
     return 0;
 }

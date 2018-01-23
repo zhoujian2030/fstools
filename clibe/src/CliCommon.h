@@ -8,7 +8,7 @@
 #ifndef CLI_COMMON_H
 #define CLI_COMMON_H
 
-#include "MacInterface.h"
+#include "CliCommon.h"
 
 #define IP_RECV_MSG_BUFFER_LENGTH 1500
 

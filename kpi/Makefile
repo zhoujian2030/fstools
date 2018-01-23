@@ -6,6 +6,7 @@ OBJDIR = obj
 SRCDIR = src
 DEPDIR = dep
 BINDIR = bin
+INCDIR = inc
 # Libraries
 
 INC += -I$(PROJBASE)/cm/inc -I$(PROJBASE)/net/inc -I$(PROJBASE)/qmss/inc
@@ -25,6 +26,8 @@ all: $(TARGET)
 $(TARGET): buildrepo $(OBJS)
 	$(CXX) $(OBJS) -o $@ -lrt -pthread $(LIBABOOST) $(LIBAGTEST) $(LIBS)
 	@mv $(TARGET) $(OBJDIR)
+	@mkdir -p $(INCDIR)
+	@cp $(SRCDIR)/*.h $(INCDIR)
 
 clean:
 	rm -rf $(BINDIR) $(OBJDIR) $(SRCDIR)/*.o $(DEPDIR)

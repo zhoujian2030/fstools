@@ -27,8 +27,8 @@ using namespace cm;
 #endif
 
 // ------------------------------------------------
-KpiService::KpiService(std::string serviceName) 
-: Service(serviceName)
+KpiService::KpiService(std::string serviceName, Qmss* qmss) 
+: Service(serviceName), m_macQmss(qmss)
 {
     init();
     m_transactionId = 0;
@@ -50,8 +50,8 @@ unsigned long KpiService::run() {
     Socket::getSockaddrByIpAndPort(&m_rrcAddress.addr, RRC_UDP_SERVER_IP, RRC_UDP_SERVER_PORT);
     KpiWorker* pKpiWorker = new KpiWorker("KpiWorker", m_udpServerSocket);
 #else 
-    Qmss::initQmss();
-    m_macQmss = new Qmss(Qmss::QID_CLI_SEND_TO_L2, Qmss::QID_CLI_RECV_FROM_L2);
+    // Qmss::initQmss();
+    // m_macQmss = new Qmss(Qmss::QID_CLI_SEND_TO_L2, Qmss::QID_CLI_RECV_FROM_L2);
     KpiWorker* pKpiWorker = new KpiWorker("KpiWorker", m_macQmss);
 #endif
 

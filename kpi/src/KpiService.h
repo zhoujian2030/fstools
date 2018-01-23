@@ -14,7 +14,7 @@
 // #include "SelectSocketSet.h"
 #endif
 #include "EventIndicator.h"
-#include "MacInterface.h"
+#include "CliCommon.h"
 
 class Qmss;
 
@@ -22,7 +22,11 @@ namespace kpi {
 
     class KpiService : public cm::Service {
     public:
+#ifdef KPI_L3
         KpiService(std::string serviceName);
+#else
+        KpiService(std::string serviceName, Qmss* qmss);
+#endif
         virtual ~KpiService();
 
         void postEvent();

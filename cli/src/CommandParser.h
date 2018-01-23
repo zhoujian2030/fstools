@@ -25,7 +25,7 @@ namespace cli {
 
         bool parse(int argc, char* argv[]);
 
-        bool send(Qmss* qmss);
+        bool execute(Qmss* qmss, int argc, char* argv[]);
 
     private:
         bool m_isValid;
@@ -39,6 +39,10 @@ namespace cli {
         // for TEST command
         int m_numUe;
         int m_numTestTime;
+
+        // for KPI
+        int m_argcKpi;
+        char** m_argvKpi;
         
         void showUsage();
         bool parseParam(std::string option, int index);

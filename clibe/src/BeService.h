@@ -12,7 +12,7 @@
 #include "CliTcpServerSocket.h"
 #include "SelectSocketSet.h"
 #include "EventIndicator.h"
-#include "MacInterface.h"
+#include "CliCommon.h"
 #include "CliWorker.h"
 #include "Task.h"
 #include "UdpSocket.h"

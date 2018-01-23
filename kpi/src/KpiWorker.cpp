@@ -315,7 +315,7 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
 }
 
 void KpiWorker::displayCounter(void* counter) {
-    if (gWriteOption == 4) {
+    if (gWriteOption != 4) {
         system("clear");
     }
 
@@ -352,7 +352,10 @@ void KpiWorker::displayCounter(void* counter) {
     if (m_file) {
         varLength = sprintf(dispChar + sumLength, "File: %s\n", m_filename.c_str());
         sumLength += varLength;
-    }    
+    } else {
+        varLength = sprintf(dispChar + sumLength, "\n", m_filename.c_str());
+        sumLength += varLength;
+    }   
     varLength = sprintf(dispChar + sumLength, "Name            Accumulate  Delta(%ds)\n", m_period/1000);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");

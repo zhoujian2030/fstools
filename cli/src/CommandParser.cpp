@@ -13,7 +13,7 @@
 #include "CLogger.h"
 #include "CommandParser.h"
 #include "CliCommon.h"
-#include "MacInterface.h"
+#include "CliCommon.h"
 #include "Qmss.h"
 #include <iostream>
 #include <algorithm>
@@ -61,9 +61,24 @@ bool CommandParser::parse(int argc, char* argv[]) {
     return true;
 }
 
+#ifdef KPI_L3
+extern void parseAndExecuteKpiCmd(int argc, char* argv[]);
+#else
+extern void parseAndExecuteKpiCmd(Qmss* qmss, int argc, char* argv[]);
+#endif
 // ---------------------------------------
-bool CommandParser::send(Qmss* qmss) {
+bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
     if (m_isValid) {
+        if (m_tgtType == TGT_KPI) {
+            LOG_DBG(CLI_LOGGER_NAME, "[%s], call KPI main function\n", __func__);
+#ifdef KPI_L3
+            parseAndExecuteKpiCmd(argc-2, &argv[2]);
+#else 
+            parseAndExecuteKpiCmd(qmss, argc-2, &argv[2]);
+#endif
+            return true;
+        }
+
         LteMacMsg* msg = (LteMacMsg*)m_sendBuffer;
         msg->transactionId = htons(1111);
         msg->srcModuleId =  htons(CLI_MODULE_ID);
@@ -171,6 +186,10 @@ bool CommandParser::parseParam(std::string option, int index) {
     transform(option.begin(), option.end(), option.begin(), ::toupper);
     LOG_DBG(CLI_LOGGER_NAME, "[%s], option  = %s, index = %d\n", __func__, option.c_str(), index);
 
+    // if ((index > 2) && (m_tgtType == TGT_KPI)) {
+    //     return false;
+    // }
+
     if (index == 1) {
         if (option.compare(CMD_TYPE_SET_NAME) == 0) {
             m_cmdType = SET;
@@ -186,6 +205,10 @@ bool CommandParser::parseParam(std::string option, int index) {
         } else if (option.compare(TGT_TYPE_SIM_NAME) == 0) {
             m_tgtType = TGT_SIM;
             m_isValid = true;
+        } else if (option.compare(TGT_TYPE_KPI_NAME) == 0) {
+            m_tgtType = TGT_KPI;
+            m_isValid = true;
+            return false;
         } else {
             LOG_DBG(CLI_LOGGER_NAME, "[%s], invalid option = %s\n", __func__, option.c_str());
             return false;
@@ -276,4 +299,5 @@ void CommandParser::showUsage() {
     cout << "  cli set l2 rat2type [distributed/localized]" << endl; 
     cout << "  cli set l2 rachthr  [1, 2, 3, ...]" << endl; 
     cout << "  cli set l2 maxuesched  [1, 2, 3, 4]" << endl; 
+    cout << "  cli get kpi [kpi options]" << endl; 
 }
