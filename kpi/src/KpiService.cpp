@@ -67,7 +67,7 @@ unsigned long KpiService::run() {
     pKpiWorker->start();
 
     while (true) {
-        sendMacKpiReq();
+        sendKpiReq();
         Thread::sleep(m_period);
     }
 
@@ -77,10 +77,10 @@ unsigned long KpiService::run() {
 }
 
 // ------------------------------------------------
-int KpiService::sendMacKpiReq() {
+int KpiService::sendKpiReq() {
 
-    LteMacMsg* msg = (LteMacMsg*)m_sendBuffer;
-    int length = LTE_MSG_HEAD_LENGTH;
+    LteCliMsg* msg = (LteCliMsg*)m_sendBuffer;
+    int length = LTE_CLI_MSG_HEAD_LENGTH;
 
     msg->transactionId = htons(++m_transactionId);
     msg->srcModuleId =  htons(KPI_MODULE_ID);
@@ -88,13 +88,13 @@ int KpiService::sendMacKpiReq() {
 
 #ifdef KPI_L3
     msg->dstModuleId =  htons(RRC_MODULE_ID);
-    msg->msgId = htons(RRC_KPI_REQ);
+    msg->msgId = htons(L3_CLI_GET_KPI_REQ);
     LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to RRC, msg length = %d\n", __func__, length);
     return m_udpServerSocket->send(m_sendBuffer, length, m_rrcAddress);
 #else
     msg->dstModuleId =  htons(MAC_MODULE_ID);
-    msg->msgId = htons(MAC_KPI_REQ);
-    LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to MAC, msg length = %d\n", __func__, length);
+    msg->msgId = htons(L2_CLI_GET_KPI_REQ);
+    LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to L2, msg length = %d\n", __func__, length);
     return m_macQmss->send(m_sendBuffer, length);
 #endif
 }

@@ -35,21 +35,21 @@ typedef unsigned char UInt8;
 
 // msg id
 typedef enum {
-	MAC_KPI_REQ = 0x01,
-    RRC_KPI_REQ = 0x02
+	L2_CLI_GET_KPI_REQ = 0x01,
+    L3_CLI_GET_KPI_REQ = 0x02
 } KPIReqAPI;
 
 typedef enum {
-    MAC_CLI_SET_LOG_LEVEL_REQ = 0x01,
-    MAC_CLI_SET_COMM_CHAN_RAT2 = 0x02,
-    MAC_CLI_SET_RACH_THRESTHOLD = 0x03,
-    MAC_CLI_SET_MAX_UE_SCHEDULED = 0x04,
+    L2_CLI_SET_LOG_LEVEL_REQ = 0x01,
+    L2_CLI_SET_COMM_CHAN_RAT2 = 0x02,
+    L2_CLI_SET_RACH_THRESTHOLD = 0x03,
+    L2_CLI_SET_MAX_UE_SCHEDULED = 0x04,
     
     SIM_CLI_SET_PARAM_REQ = 0x11
 } CLIReqAPI;
 
-#define LTE_MSG_HEAD_LENGTH 12
-#define MAC_VAR_SIZE(x) 1
+#define LTE_CLI_MSG_HEAD_LENGTH 12
+#define CLI_VAR_SIZE(x) 1
 typedef struct {
 	UInt16 transactionId;
 	UInt16 srcModuleId;
@@ -57,8 +57,8 @@ typedef struct {
 	UInt16 msgId;
 	UInt16 length;
     UInt16 spare;
-	char msgBody[MAC_VAR_SIZE(length)];
-} LteMacMsg;
+	char msgBody[CLI_VAR_SIZE(length)];
+} LteCliMsg;
 
 #if 0
 typedef struct  S_L3MacMsgHead

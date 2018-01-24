@@ -1,0 +1,13 @@
+@startuml
+
+actor "User" as user
+participant "KpiCommandParser" as kpicmd
+participant "KpiService" as kpiservice
+
+user -> kpicmd: parseAndExecute()
+
+kpicmd -> kpicmd : save kpi parameters
+
+kpicmd -> kpiservice: Start KPI service task
+
+@enduml

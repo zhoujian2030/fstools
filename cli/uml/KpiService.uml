@@ -1,0 +1,28 @@
+@startuml
+
+participant "KpiService" as kpiservice
+participant "KpiWorker" as kpiworker
+participant "Qmss" as qmss
+participant "UdpSocket" as udp
+actor "LTE L2" as l2
+actor "LTE L3" as l3
+
+kpiservice -> kpiservice ++: run()
+kpiservice -> kpiworker : Start KPI worker task
+
+loop every 10s (default)
+kpiservice -> kpiservice ++: sendKpiReq
+
+alt GET L2 KPI
+	kpiservice -> qmss : send()
+	qmss -> l2 : send KPI req
+else GET L3 KPI 
+	kpiservice -> udp : send()
+	udp -> l3 : send KPI req
+end
+return 
+
+end
+
+return
+@enduml

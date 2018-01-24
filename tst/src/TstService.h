@@ -32,7 +32,7 @@ namespace tst {
 
     #define COLLECT_PERIOD_MS 1000
 
-    #define LTE_MSG_HEAD_LENGTH 10
+    #define LTE_CLI_MSG_HEAD_LENGTH 10
     #define MAC_VAR_SIZE(x) 1
     typedef struct {
         UInt16 transactionId;

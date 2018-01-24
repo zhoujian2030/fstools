@@ -14,7 +14,7 @@ LIBS = $(PROJBASE)/qmss/lib/libqmss.a $(PROJBASE)/net/lib/libnet_arm.a $(PROJBAS
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
-KPI_OBJS := $(PROJBASE)/kpi/obj/KpiCommand.o $(PROJBASE)/kpi/obj/KpiService.o $(PROJBASE)/kpi/obj/KpiWorker.o
+KPI_OBJS := $(PROJBASE)/kpi/obj/KpiCommandParser.o $(PROJBASE)/kpi/obj/KpiService.o $(PROJBASE)/kpi/obj/KpiWorker.o
 
 include $(PROJBASE)/cm/global.mk
 CFLAGS += -DOS_LINUX -UKPI_L3 -UGSM -UUSE_UDP

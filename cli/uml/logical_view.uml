@@ -1,0 +1,23 @@
+@startuml
+
+actor "User" as user
+participant "CliCommandParser" as clicmd
+participant "KpiCommandParser" as kpicmd
+participant "Qmss" as qmss
+actor "LTE L2" as l2
+
+user -> clicmd: parse()
+
+user -> clicmd: execute()
+
+alt command is "SET"
+
+clicmd -> qmss : send()
+qmss -> l2: send cli msg
+
+else command is "GET KPI"
+
+clicmd -> kpicmd: parseAndExecute()
+
+end
+@enduml

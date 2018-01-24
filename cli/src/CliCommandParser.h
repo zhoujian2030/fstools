@@ -1,12 +1,12 @@
 /*
- * CommandParser.h
+ * CliCommandParser.h
  *
  *  Created on: June 13, 2017
  *      Author: j.zhou
  */
 
-#ifndef COMMAND_PARSER_H
-#define COMMAND_PARSER_H
+#ifndef CLI_COMMAND_PARSER_H
+#define CLI_COMMAND_PARSER_H
 
 #include <string>
 
@@ -18,10 +18,10 @@ namespace cli {
         MAX_COMMAND_CONTENT_LENGTH = 512
     };
 
-    class CommandParser {
+    class CliCommandParser {
     public:
-        CommandParser();
-        ~CommandParser();
+        CliCommandParser();
+        ~CliCommandParser();
 
         bool parse(int argc, char* argv[]);
 
@@ -32,6 +32,7 @@ namespace cli {
         int m_cmdType;
         int m_tgtType;
         int m_subTgtType;
+        int m_msgId;
         char m_cmdContent[MAX_COMMAND_CONTENT_LENGTH];
 
         char m_sendBuffer[MAX_COMMAND_CONTENT_LENGTH];

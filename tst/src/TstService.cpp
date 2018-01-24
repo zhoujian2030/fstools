@@ -35,7 +35,7 @@ unsigned long TstService::run() {
     m_simQmss = new Qmss(Qmss::QID_TST_SEND_START_TEST, Qmss::QID_INVALID_ID);
 
     LteTstMsg* msg = (LteTstMsg*)m_sendBuffer;
-    int length = LTE_MSG_HEAD_LENGTH;
+    int length = LTE_CLI_MSG_HEAD_LENGTH;
 
     msg->transactionId = 0;
     msg->srcModuleId =  htons(TST_MODULE_ID);

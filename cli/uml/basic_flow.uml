@@ -1,0 +1,22 @@
+@startuml
+autonumber
+
+actor "User" as user
+participant "CLI" as cli
+participant "KPI" as kpi
+participant "LTE L2" as l2
+
+user -> cli : Change L2 configuration
+cli -> cli : Parse command and compose CLI message
+cli -> l2 : MAC_CLI_SET_LOG_LEVEL_REQ / MAC_CLI_SET_COMM_CHAN_RAT2 ...
+
+user -> cli : Query L2 status
+cli -> cli : Parse command
+cli -> kpi : Kpi parameters
+loop (period is 10s default)
+	kpi -> l2 : L2_KPI_REQ
+	l2 -> kpi : response
+	kpi -> kpi : Display on console or write to file
+end
+
+@enduml

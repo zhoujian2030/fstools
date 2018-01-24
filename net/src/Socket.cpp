@@ -173,7 +173,7 @@ bool Socket::connect(const InetAddressPort& theRemoteAddrPort) {
         m_localPort = ntohs(m_localSa.sin_port);
         m_localIp = Socket::getHostAddress((struct sockaddr*)&m_localSa);
 
-        LOG_DBG(NET_LOGGER_NAME, "connect success, local address = %s:%d, fd = %d\n", m_localIp, m_localPort, m_socket);
+        LOG_DBG(NET_LOGGER_NAME, "connect success, local address = %s:%d, fd = %d\n", m_localIp.c_str(), m_localPort, m_socket);
 
         m_state = CONNECTED;
         return true;

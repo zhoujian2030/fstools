@@ -11,20 +11,22 @@
 #include <arpa/inet.h>
 
 #include "CLogger.h"
-#include "CommandParser.h"
-#include "CliCommon.h"
+#include "CliCommandParser.h"
+#include "Common.h"
 #include "CliCommon.h"
 #include "Qmss.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include "KpiCommandParser.h"
 
 using namespace std;
 using namespace cli;
+using namespace kpi;
 
 // ---------------------------------------
-CommandParser::CommandParser() 
-: m_isValid(false), m_cmdType(0), m_tgtType(0), m_subTgtType(0)
+CliCommandParser::CliCommandParser() 
+: m_isValid(false), m_cmdType(0), m_tgtType(0), m_subTgtType(0), m_msgId(0)
 {
     memset((void*)m_cmdContent, 0, MAX_COMMAND_CONTENT_LENGTH);
     m_numUe = 1;
@@ -32,12 +34,12 @@ CommandParser::CommandParser()
 }
 
 // ---------------------------------------
-CommandParser::~CommandParser() {
+CliCommandParser::~CliCommandParser() {
 
 }
 
 // ---------------------------------------
-bool CommandParser::parse(int argc, char* argv[]) {
+bool CliCommandParser::parse(int argc, char* argv[]) {
     if (argc < 3) {
         LOG_DBG(CLI_LOGGER_NAME, "[%s], mismatch number of command parameters, argc = %d\n", __func__, argc);
         //showUsage();
@@ -61,34 +63,36 @@ bool CommandParser::parse(int argc, char* argv[]) {
     return true;
 }
 
-#ifdef KPI_L3
-extern void parseAndExecuteKpiCmd(int argc, char* argv[]);
-#else
-extern void parseAndExecuteKpiCmd(Qmss* qmss, int argc, char* argv[]);
-#endif
 // ---------------------------------------
-bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
+bool CliCommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
     if (m_isValid) {
         if (m_tgtType == TGT_KPI) {
-            LOG_DBG(CLI_LOGGER_NAME, "[%s], call KPI main function\n", __func__);
+            if (m_cmdType == GET) {
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], call KPI main function\n", __func__);
+                KpiCommandParser kpiCmdParser;
 #ifdef KPI_L3
-            parseAndExecuteKpiCmd(argc-2, &argv[2]);
+                kpiCmdParser.parseAndExecute(argc-2, &argv[2]);
 #else 
-            parseAndExecuteKpiCmd(qmss, argc-2, &argv[2]);
+                kpiCmdParser.parseAndExecute(qmss, argc-2, &argv[2]);
 #endif
-            return true;
+                return true;
+            } else {
+                showUsage();
+                LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support SET kpi\n", __func__);
+                return false;
+            }
         }
 
-        LteMacMsg* msg = (LteMacMsg*)m_sendBuffer;
+        LteCliMsg* msg = (LteCliMsg*)m_sendBuffer;
         msg->transactionId = htons(1111);
         msg->srcModuleId =  htons(CLI_MODULE_ID);
-        int length = LTE_MSG_HEAD_LENGTH;
+        int length = LTE_CLI_MSG_HEAD_LENGTH;
 
         if (m_tgtType == TGT_L2) {
             msg->dstModuleId =  htons(MAC_MODULE_ID);
             if (m_subTgtType == SUB_TGT_LOG_LEVEL) {
                 if ((m_cmdType == SET)) {
-                    msg->msgId = htons(MAC_CLI_SET_LOG_LEVEL_REQ);
+                    msg->msgId = htons(L2_CLI_SET_LOG_LEVEL_REQ);
                     length += sizeof(SetLogLevelReq);
                     msg->length = htons(length);
                     SetLogLevelReq* logLevelReq = (SetLogLevelReq*)msg->msgBody;
@@ -102,7 +106,7 @@ bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
                 }
             } else if (m_subTgtType == SUB_TGT_RAT2_TYPE) {
                 if ((m_cmdType == SET)) {
-                    msg->msgId = htons(MAC_CLI_SET_COMM_CHAN_RAT2);
+                    msg->msgId = htons(L2_CLI_SET_COMM_CHAN_RAT2);
                     length += sizeof(SetRAT2Type);
                     msg->length = htons(length);
                     SetRAT2Type* rat2TypeReq = (SetRAT2Type*)msg->msgBody;
@@ -116,7 +120,7 @@ bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
                 }
             } else if (m_subTgtType == SUB_TGT_RACH_THR) {
                 if ((m_cmdType == SET)) {
-                    msg->msgId = htons(MAC_CLI_SET_RACH_THRESTHOLD);
+                    msg->msgId = htons(L2_CLI_SET_RACH_THRESTHOLD);
                     length += sizeof(UInt32);
                     msg->length = htons(length);
                     UInt32* rachThr = (UInt32*)msg->msgBody;
@@ -130,7 +134,7 @@ bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
                 }
             } else if (m_subTgtType == SUB_TGT_MAX_UE_SCHED) {
                 if ((m_cmdType == SET)) {
-                    msg->msgId = htons(MAC_CLI_SET_MAX_UE_SCHEDULED);
+                    msg->msgId = htons(L2_CLI_SET_MAX_UE_SCHEDULED);
                     length += sizeof(UInt32);
                     msg->length = htons(length);
                     UInt32* maxUeSched = (UInt32*)msg->msgBody;
@@ -170,7 +174,7 @@ bool CommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
     }
 }
 
-int CommandParser::s2i(string theString) {
+int CliCommandParser::s2i(string theString) {
     int result;
     stringstream ss;
     ss << theString;
@@ -182,7 +186,7 @@ int CommandParser::s2i(string theString) {
 }
 
 // ---------------------------------------
-bool CommandParser::parseParam(std::string option, int index) {
+bool CliCommandParser::parseParam(std::string option, int index) {
     transform(option.begin(), option.end(), option.begin(), ::toupper);
     LOG_DBG(CLI_LOGGER_NAME, "[%s], option  = %s, index = %d\n", __func__, option.c_str(), index);
 
@@ -284,7 +288,7 @@ bool CommandParser::parseParam(std::string option, int index) {
 }
 
 // ---------------------------------------
-void CommandParser::showUsage() {
+void CliCommandParser::showUsage() {
     cout << "Usage: " << endl;
     cout << "  cli set [param1] [param2] [param3]" << endl;
     cout << "  cli get [param1] [param2] [param3]" << endl << endl;

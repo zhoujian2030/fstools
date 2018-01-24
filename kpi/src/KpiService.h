@@ -34,7 +34,7 @@ namespace kpi {
     private:
         virtual unsigned long run();
 
-        int sendMacKpiReq();
+        int sendKpiReq();
 
 #ifdef KPI_L3
         net::UdpSocket* m_udpServerSocket;
