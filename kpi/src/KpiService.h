@@ -25,7 +25,7 @@ namespace kpi {
 #ifdef KPI_L3
         KpiService(std::string serviceName);
 #else
-        KpiService(std::string serviceName, Qmss* qmss);
+        KpiService(std::string serviceName, Qmss* qmss, UInt32 msgId);
 #endif
         virtual ~KpiService();
 
@@ -46,6 +46,7 @@ namespace kpi {
         unsigned int m_transactionId;
 
         UInt32 m_period;
+        UInt32 m_msgId;
 
         cm::EventIndicator m_stopEvent;
     };

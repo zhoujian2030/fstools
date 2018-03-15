@@ -50,6 +50,7 @@ bool KpiCommandParser::parseAndExecute(int argc, char* argv[])
 bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
 #endif
 {
+    UInt32 msgId = L2_CLI_GET_KPI_REQ;
     if (argc > 1) {
         for (int i=1; i<argc;) {
             string option(argv[i++]);
@@ -60,7 +61,9 @@ bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
                 gShowAll = true;
             } else if (option.compare("--phy") == 0) {
                 gShowPhyKpi = true;
-            } else {
+            } else if (option.compare("--crc") == 0) {
+                msgId = L2_CLI_GET_CRC_KPI_REQ;
+            }  else {
                 if (i<argc) {
                     parseMinorOptions(option, string(argv[i++]));
                 } else {
@@ -76,7 +79,7 @@ bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
 #ifdef KPI_L3
     KpiService* kpiService = new KpiService("KPI Service");
 #else
-    KpiService* kpiService = new KpiService("KPI Service", qmss);
+    KpiService* kpiService = new KpiService("KPI Service", qmss, msgId);
 #endif
     kpiService->wait();
 
@@ -138,6 +141,7 @@ void KpiCommandParser::showMinorUsage() {
     cout << "-d : The directory for kpi file saved to, default is /OAM/" << endl;
     cout << "--debug : enable debug log for this kpi tool" << endl;
     cout << "--all :   show all kpi details if display on console is enabled" << endl;
+    cout << "--crc : only get ul crc kpi data" << endl;
     // cout << "--phy :   show phy kpi" << endl;
     cout << endl;
 
@@ -166,7 +170,4 @@ void KpiCommandParser::parseOptions(string option, string value) {
         exit(0);
     }
 }
-
-
-
 

@@ -18,7 +18,7 @@ SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
 OBJS := $(subst $(SRCDIR)/, $(OBJDIR)/, $(SRCS:.cpp=.o))
 
 include $(PROJBASE)/cm/global.mk
-CFLAGS += -DOS_LINUX -UKPI_L3 -UGSM -UUSE_UDP
+CFLAGS += -DOS_LINUX -UKPI_L3 -UGSM -UUSE_UDP -UDEBUG_DL_PHY
 
 all: $(TARGET)
 

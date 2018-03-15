@@ -36,7 +36,8 @@ typedef unsigned char UInt8;
 // msg id
 typedef enum {
 	L2_CLI_GET_KPI_REQ = 0x01,
-    L3_CLI_GET_KPI_REQ = 0x02
+    L3_CLI_GET_KPI_REQ = 0x02,
+    L2_CLI_GET_CRC_KPI_REQ = 0x03
 } KPIReqAPI;
 
 typedef enum {
@@ -142,6 +143,13 @@ typedef struct {
 
     UInt32 harqAckSent;
     UInt32 harqNackSent;
+
+#ifdef DEBUG_DL_PHY
+    UInt32 harqAckPUCCH;
+    UInt32 harqNackPUCCH;
+    UInt32 harqDtxPUCCH;
+    UInt32 dlTB[10];
+#endif
 #endif
 } LteCounter;
 

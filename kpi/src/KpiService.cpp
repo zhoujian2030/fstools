@@ -27,12 +27,13 @@ using namespace cm;
 #endif
 
 // ------------------------------------------------
-KpiService::KpiService(std::string serviceName, Qmss* qmss) 
+KpiService::KpiService(std::string serviceName, Qmss* qmss, UInt32 msgId) 
 : Service(serviceName), m_macQmss(qmss)
 {
     init();
     m_transactionId = 0;
     m_period = gPeriod;
+    m_msgId = msgId;
 }
 
 // ------------------------------------------------
@@ -52,7 +53,7 @@ unsigned long KpiService::run() {
 #else 
     // Qmss::initQmss();
     // m_macQmss = new Qmss(Qmss::QID_CLI_SEND_TO_L2, Qmss::QID_CLI_RECV_FROM_L2);
-    KpiWorker* pKpiWorker = new KpiWorker("KpiWorker", m_macQmss);
+    KpiWorker* pKpiWorker = new KpiWorker("KpiWorker", m_macQmss, m_msgId);
 #endif
 
 #ifndef GSM
@@ -93,8 +94,8 @@ int KpiService::sendKpiReq() {
     return m_udpServerSocket->send(m_sendBuffer, length, m_rrcAddress);
 #else
     msg->dstModuleId =  htons(MAC_MODULE_ID);
-    msg->msgId = htons(L2_CLI_GET_KPI_REQ);
-    LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to L2, msg length = %d\n", __func__, length);
+    msg->msgId = htons(m_msgId);
+    LOG_DBG(KPI_LOGGER_NAME, "[%s], send KPI Req to L2, msg length = %d, m_msgId = %d\n", __func__, length, m_msgId);
     return m_macQmss->send(m_sendBuffer, length);
 #endif
 }

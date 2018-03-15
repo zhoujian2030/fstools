@@ -18,7 +18,7 @@ using namespace net;
 #endif
 using namespace std;
 
-#define VERSION         1003
+#define VERSION         1004
 #define VERSION_LEN     4
 
 // ----------------------------------------
@@ -28,13 +28,14 @@ KpiWorker::KpiWorker(std::string workerName, UdpSocket* udpServerSocket)
 {
     m_udpServerSocket = udpServerSocket;//new UdpSocket(UDP_SERVER_IP_RECV_L3_KPI, UDP_SERVER_PORT_RECV_L3);
 #else
-KpiWorker::KpiWorker(std::string workerName, Qmss* qmss)
+KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
 : Thread(workerName)
 {
     m_macQmss = qmss;
 #endif
     m_writeOption = gWriteOption;
     m_period = gPeriod;
+    m_msgId = msgId;
 
     m_file = 0;
 
@@ -110,7 +111,7 @@ KpiWorker::~KpiWorker() {
     if (m_writeOption == 1) {
         delete m_file;
     }
-
+ 
 #ifdef KPI_L3
     delete m_udpServerSocket;
 #endif
@@ -127,47 +128,58 @@ unsigned long KpiWorker::run() {
         std::string kpiCounterName;
         kpiCounterName.append("NO.; ");
 #ifndef GSM
-        kpiCounterName.append("ActiveUe; ");
-        kpiCounterName.append("RACH; ");
-        kpiCounterName.append("MSG2; ");
-        kpiCounterName.append("MSG3; ");
-        kpiCounterName.append("ContResl; ");
-        kpiCounterName.append("CrcValid; ");
-        kpiCounterName.append("HarqAckRecv; ");
-        kpiCounterName.append("MSG3Exp; ");
-        kpiCounterName.append("CrcError; ");
-        kpiCounterName.append("HarqNAckRecv; ");
-        kpiCounterName.append("ContNack; ");
-        kpiCounterName.append("RRCReq; ");
-        kpiCounterName.append("RRCSetup; ");
-        kpiCounterName.append("RRCCompl; ");
-        kpiCounterName.append("IDReq; ");
-        kpiCounterName.append("IDResp; ");
-        kpiCounterName.append("AttRej; ");
-        kpiCounterName.append("TAURej; ");
-        kpiCounterName.append("RRCRel; ");
-        kpiCounterName.append("ReestReq; ");
-        kpiCounterName.append("RRCRej; ");
-        kpiCounterName.append("ReestRej; ");
-        kpiCounterName.append("UEInfReq; ");
-        kpiCounterName.append("UEInfRsp; ");
-        kpiCounterName.append("RRCRecfg; ");
-        kpiCounterName.append("RRCRecfgCompl; ");
-        kpiCounterName.append("RRCReestabCompl; ");
-        kpiCounterName.append("RRCReestab; ");
-        kpiCounterName.append("ULDCCH; ");
-        kpiCounterName.append("DLDCCH; ");
+        if (m_msgId == L2_CLI_GET_KPI_REQ) { 
+            kpiCounterName.append("ActiveUe; ");
+            kpiCounterName.append("RACH; ");
+            kpiCounterName.append("MSG2; ");
+            kpiCounterName.append("MSG3; ");
+            kpiCounterName.append("ContResl; ");
+            kpiCounterName.append("CrcValid; ");
+            kpiCounterName.append("HarqAckRecv; ");
+            kpiCounterName.append("MSG3Exp; ");
+            kpiCounterName.append("CrcError; ");
+            kpiCounterName.append("HarqNAckRecv; ");
+            kpiCounterName.append("ContNack; ");
+            kpiCounterName.append("RRCReq; ");
+            kpiCounterName.append("RRCSetup; ");
+            kpiCounterName.append("RRCCompl; ");
+            kpiCounterName.append("IDReq; ");
+            kpiCounterName.append("IDResp; ");
+            kpiCounterName.append("AttRej; ");
+            kpiCounterName.append("TAURej; ");
+            kpiCounterName.append("RRCRel; ");
+            kpiCounterName.append("ReestReq; ");
+            kpiCounterName.append("RRCRej; ");
+            kpiCounterName.append("ReestRej; ");
+            kpiCounterName.append("UEInfReq; ");
+            kpiCounterName.append("UEInfRsp; ");
+            kpiCounterName.append("RRCRecfg; ");
+            kpiCounterName.append("RRCRecfgCompl; ");
+            kpiCounterName.append("RRCReestabCompl; ");
+            kpiCounterName.append("RRCReestab; ");
+            kpiCounterName.append("ULDCCH; ");
+            kpiCounterName.append("DLDCCH; ");
 #ifndef KPI_L3
-        kpiCounterName.append("HarqDTX; ");
-        kpiCounterName.append("HarqOther; ");
-        kpiCounterName.append("MaxActiveMacUe; ");
-        kpiCounterName.append("ActiveRlcUe; ");
-        kpiCounterName.append("MaxActiveRlcUe; ");
-        kpiCounterName.append("ActivePdcpUe; ");
-        kpiCounterName.append("MaxActivePdcpUe; ");
-        kpiCounterName.append("HarqAckSent; ");
-        kpiCounterName.append("HarqNackSent; ");
+            kpiCounterName.append("HarqDTX; ");
+            kpiCounterName.append("HarqOther; ");
+            kpiCounterName.append("MaxActiveMacUe; ");
+            kpiCounterName.append("ActiveRlcUe; ");
+            kpiCounterName.append("MaxActiveRlcUe; ");
+            kpiCounterName.append("ActivePdcpUe; ");
+            kpiCounterName.append("MaxActivePdcpUe; ");
+            kpiCounterName.append("HarqAckSent; ");
+            kpiCounterName.append("HarqNackSent; ");
+#ifdef DEBUG_DL_PHY            
+            kpiCounterName.append("HarqAckRecvPUCCH; ");
+            kpiCounterName.append("HarqNackRecvPUCCH; ");
+            kpiCounterName.append("HarqDtxRecvPUCCH; ");
+#endif 
+
 #endif
+        } else if (m_msgId == L2_CLI_GET_CRC_KPI_REQ) {
+            kpiCounterName.append("CrcCorrect; ");
+            kpiCounterName.append("CrcError; ");
+        }
 #else 
         kpiCounterName.append("ChannReq; ");
         kpiCounterName.append("ImmediaAssign; ");
@@ -227,90 +239,115 @@ unsigned long KpiWorker::run() {
 void KpiWorker::handleMacKpiResponse(UInt32 length) {
     LOG_DBG(KPI_LOGGER_NAME, "[%s], Recv KPI response length = %d\n", __func__, length);
 
-    char kpiChar[1500];
     int totalLen = 0;
     int singleLen = 0;
 
     UInt32* kpiValArray = (UInt32*)m_recvBuffer;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
 #ifndef KPI_L3
-    m_targetVersion = *kpiValArray;
-    if (m_targetVersion < VERSION) {
-        system("clear");
-        if (m_targetVersion < 1000) {
-            printf("ERROR: version[%d] not upported\n", VERSION);
-        } else {
-            printf("ERROR: version[%d] mismatch, please downgrade to version[%d]\n", VERSION, m_targetVersion);
-        }        
-        exit(0);
-    }
-    kpiValArray++;
-
-    UInt32 numKpi = (length - VERSION_LEN) / sizeof(UInt32);
-#else 
-    UInt32 numKpi = length / sizeof(UInt32);
-#endif
-    if (numKpi >= m_numKpiCounter) {
-        m_index++;
-        singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
-        totalLen += singleLen;
-
-        for (int i=0; i<m_numKpiCounter; i++) {
-            m_deltaKpiArray[i] = kpiValArray[i] - m_prevKpiArray[i];
-            m_prevKpiArray[i] = kpiValArray[i];
-
-            // singleLen = sprintf(kpiChar + totalLen, "%8d, %4d; ", kpiValArray[i], m_deltaKpiArray[i]);
-            singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[i]);
-            totalLen += singleLen;
-            if ((totalLen + 30) > sizeof(kpiChar)) {
-                break;
-            }
+        m_targetVersion = *kpiValArray;
+        if (m_targetVersion < VERSION) {
+            system("clear");
+            if (m_targetVersion < 1000) {
+                printf("ERROR: version[%d] not upported\n", VERSION);
+            } else {
+                printf("ERROR: version[%d] mismatch, please downgrade to version[%d]\n", VERSION, m_targetVersion);
+            }        
+            exit(0);
         }
-        singleLen = sprintf(kpiChar + totalLen, "\n");
-        totalLen += singleLen;
+        kpiValArray++;
+
+        UInt32 numKpi = (length - VERSION_LEN) / sizeof(UInt32);
+#else 
+        UInt32 numKpi = length / sizeof(UInt32);
+#endif
+
+        char kpiChar[3000];
+        if (numKpi >= m_numKpiCounter) {
+            m_index++;
+            singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
+            totalLen += singleLen;
+
+            for (int i=0; i<m_numKpiCounter; i++) {
+                m_deltaKpiArray[i] = kpiValArray[i] - m_prevKpiArray[i];
+                m_prevKpiArray[i] = kpiValArray[i];
+
+                // singleLen = sprintf(kpiChar + totalLen, "%8d, %4d; ", kpiValArray[i], m_deltaKpiArray[i]);
+                singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[i]);
+                totalLen += singleLen;
+                if ((totalLen + 30) > sizeof(kpiChar)) {
+                    break;
+                }
+            }
+            singleLen = sprintf(kpiChar + totalLen, "\n");
+            totalLen += singleLen;
 
 #ifdef USE_UDP
-        if (m_udpSocket) {
-            // send to kpi receiver
-            LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
-            m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);   
-        } 
+            if (m_udpSocket) {
+                // send to kpi receiver
+                LOG_DBG(KPI_LOGGER_NAME, "[%s], Send KPI data to KPI server = %d\n", __func__, totalLen);
+                m_udpSocket->send((const char*)kpiChar, totalLen, m_kpiServerAddress);   
+            } 
 #endif 
+            if (m_file) {
+                int writeBytes = 0;
+                m_file->write((const char*)kpiChar, totalLen, writeBytes);
+            }
+            
+            if ((gWriteOption < 3) || (gWriteOption == 4)) {
+                //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
+                displayCounter(m_recvBuffer);
+            }
+        } else {
+            LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid kpi response\n", __func__);
+#if 0
+            Qmss* qmss = new Qmss(L1_SEND_CMAC_REPLY, Qmss::QID_CLI_RECV_FROM_L2);
+            
+            // For test
+            S_L3MacMsgHead* msg = (S_L3MacMsgHead*)m_recvBuffer;
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], mNum = %u\n", __func__, msg->mNum);
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], tLen = %d\n", __func__, msg->tLen);
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], sno = %d\n", __func__, msg->sno);
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], attr = %d\n", __func__, msg->attr);
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], common = %d\n", __func__, msg->common);
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], opc = %d\n", __func__, msg->opc);
 
+            msg->mNum = 0xDDCCBBAA;
+            msg->sno = 2;
+            // msg->opc = 6;
+            msg->tLen = sizeof(S_L3MacMsgHead) + sizeof(S_L3MacCfgRsp);
+            S_L3MacCfgRsp* pCfgRsp = (S_L3MacCfgRsp*)(m_recvBuffer+sizeof(S_L3MacMsgHead));
+            pCfgRsp->errorCode = 0;
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], msg = %p, pCfgRsp = %p\n", __func__, msg, pCfgRsp);
+            LOG_BUFFER(m_recvBuffer, msg->tLen);
+
+            Thread::sleep(10000);        
+            qmss->send(m_recvBuffer, msg->tLen);
+#endif
+        }
+    } else if (m_msgId == L2_CLI_GET_CRC_KPI_REQ) {
+        if (length % 8 != 0) {
+            LOG_ERROR(KPI_LOGGER_NAME, "[%s],Invalid length = %d\n", __func__, length);
+            return;
+        }
+        char kpiChar[8192];
+        UInt32 numUe = length / (sizeof(UInt32) * 2);
+        UInt32 n = 0;
+        for (UInt32 i=0; i<numUe; i++) {
+            m_index++;
+            singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[n++]);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[n++]);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "\n");
+            totalLen += singleLen;
+        }
         if (m_file) {
             int writeBytes = 0;
             m_file->write((const char*)kpiChar, totalLen, writeBytes);
         }
-        
-        if ((gWriteOption < 3) || (gWriteOption == 4)) {
-            //LteCounter* lteCounter = (LteCounter*)m_recvBuffer;
-            displayCounter(m_recvBuffer);
-        }
-    } else {
-        LOG_ERROR(KPI_LOGGER_NAME, "[%s], invalid kpi response\n", __func__);
-#if 0
-        Qmss* qmss = new Qmss(L1_SEND_CMAC_REPLY, Qmss::QID_CLI_RECV_FROM_L2);
-        
-        // For test
-        S_L3MacMsgHead* msg = (S_L3MacMsgHead*)m_recvBuffer;
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], mNum = %u\n", __func__, msg->mNum);
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], tLen = %d\n", __func__, msg->tLen);
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], sno = %d\n", __func__, msg->sno);
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], attr = %d\n", __func__, msg->attr);
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], common = %d\n", __func__, msg->common);
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], opc = %d\n", __func__, msg->opc);
-
-        msg->mNum = 0xDDCCBBAA;
-        msg->sno = 2;
-        // msg->opc = 6;
-        msg->tLen = sizeof(S_L3MacMsgHead) + sizeof(S_L3MacCfgRsp);
-        S_L3MacCfgRsp* pCfgRsp = (S_L3MacCfgRsp*)(m_recvBuffer+sizeof(S_L3MacMsgHead));
-        pCfgRsp->errorCode = 0;
-        LOG_DBG(KPI_LOGGER_NAME, "[%s], msg = %p, pCfgRsp = %p\n", __func__, msg, pCfgRsp);
-        LOG_BUFFER(m_recvBuffer, msg->tLen);
-
-        Thread::sleep(10000);        
-        qmss->send(m_recvBuffer, msg->tLen);
-#endif
     }
 }
 
@@ -353,7 +390,7 @@ void KpiWorker::displayCounter(void* counter) {
         varLength = sprintf(dispChar + sumLength, "File: %s\n", m_filename.c_str());
         sumLength += varLength;
     } else {
-        varLength = sprintf(dispChar + sumLength, "\n", m_filename.c_str());
+        varLength = sprintf(dispChar + sumLength, "\n");
         sumLength += varLength;
     }   
     varLength = sprintf(dispChar + sumLength, "Name            Accumulate  Delta(%ds)\n", m_period/1000);
@@ -407,6 +444,30 @@ void KpiWorker::displayCounter(void* counter) {
     sumLength += varLength;
     // varLength = sprintf(dispChar + sumLength, "HARQ Other      %10d  %8d\n", accumulateCounter->harqOther, deltaCounter->harqOther);
     // sumLength += varLength;
+#ifdef DEBUG_DL_PHY  
+    varLength = sprintf(dispChar + sumLength, "HARQ ACK PUCCH  %10d  %8d\n", accumulateCounter->harqAckPUCCH, deltaCounter->harqAckPUCCH);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ NACK PUCCH  %10d  %8d\n", accumulateCounter->harqNackPUCCH, deltaCounter->harqNackPUCCH);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "HARQ DTX PUCCH  %10d  %8d\n", accumulateCounter->harqDtxPUCCH, deltaCounter->harqDtxPUCCH);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 0 TB         %10d  %8d\n", accumulateCounter->dlTB[0], deltaCounter->dlTB[0]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 1 TB         %10d  %8d\n", accumulateCounter->dlTB[1], deltaCounter->dlTB[1]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 3 TB         %10d  %8d\n", accumulateCounter->dlTB[3], deltaCounter->dlTB[3]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 4 TB         %10d  %8d\n", accumulateCounter->dlTB[4], deltaCounter->dlTB[4]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 5 TB         %10d  %8d\n", accumulateCounter->dlTB[5], deltaCounter->dlTB[5]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 6 TB         %10d  %8d\n", accumulateCounter->dlTB[6], deltaCounter->dlTB[6]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 8 TB         %10d  %8d\n", accumulateCounter->dlTB[8], deltaCounter->dlTB[8]);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "SF 9 TB         %10d  %8d\n", accumulateCounter->dlTB[9], deltaCounter->dlTB[9]);
+    sumLength += varLength;
+#endif
 #endif
     varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
     sumLength += varLength;
@@ -436,6 +497,7 @@ void KpiWorker::displayCounter(void* counter) {
     // float harqAckDivHarqReq = 0;
     float harqAckDivHarqInd = 0;
     float idRspDivIdReq = 0;
+    float crcValidDivUlInd = 0;
 
     if (accumulateCounter->rach != 0) {
         msg3DivRach = (accumulateCounter->msg3 * 100.0) / accumulateCounter->rach;
@@ -461,6 +523,9 @@ void KpiWorker::displayCounter(void* counter) {
     }
     if (accumulateCounter->identityReq != 0) {
         idRspDivIdReq = (accumulateCounter->identityResp * 100.0) / accumulateCounter->identityReq;
+    } 
+    if (accumulateCounter->crcValid != 0) {
+        crcValidDivUlInd = (accumulateCounter->crcValid * 100.0) / (accumulateCounter->crcValid + accumulateCounter->crcError);
     }  
 
     varLength = sprintf(dispChar + sumLength, "\n");
@@ -468,6 +533,8 @@ void KpiWorker::displayCounter(void* counter) {
     varLength = sprintf(dispChar + sumLength, "MSG3/RACH:                 %f\n", msg3DivRach);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
+    sumLength += varLength;
+    varLength = sprintf(dispChar + sumLength, "CrcValid/UlDataInd:           %f\n", crcValidDivUlInd);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "RrcSetup/RrcReq:           %f\n", setupDivReq);
     sumLength += varLength;

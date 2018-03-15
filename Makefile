@@ -2,8 +2,7 @@ SUBDIRS = cm \
 	net \
 	qmss \
 	kpi \
-	cli \
-	tst
+	cli
 
 BUILDDIRS = $(SUBDIRS:%=build-%)
 INSTALLDIRS = $(SUBDIRS:%=install-%)

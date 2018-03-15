@@ -27,7 +27,7 @@ namespace kpi {
 #ifdef KPI_L3
         KpiWorker(std::string workerName, net::UdpSocket* udpServerSocket);
 #else
-        KpiWorker(std::string workerName, Qmss* qmss);
+        KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId);
 #endif
         virtual ~KpiWorker();
 
@@ -54,6 +54,7 @@ namespace kpi {
 #endif
         UInt32 m_period;
         int m_writeOption;
+        UInt32 m_msgId;
 
 #ifdef USE_UDP
         net::UdpSocket* m_udpSocket;
@@ -65,6 +66,7 @@ namespace kpi {
 
         cm::File* m_resultFile;
         std::string m_resultFilename;
+        
     };
 }
 
