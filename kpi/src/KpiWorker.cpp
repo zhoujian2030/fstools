@@ -5,6 +5,7 @@
  *      Author: j.zhou
  */
 
+#include <arpa/inet.h>
 #include "KpiWorker.h"
 #include "CLogger.h"
 #include <iostream>
@@ -18,7 +19,7 @@ using namespace net;
 #endif
 using namespace std;
 
-#define VERSION         1004
+#define VERSION         1005
 #define VERSION_LEN     4
 
 // ----------------------------------------
@@ -176,9 +177,16 @@ unsigned long KpiWorker::run() {
 #endif 
 
 #endif
-        } else if (m_msgId == L2_CLI_GET_CRC_KPI_REQ) {
+        } else if (m_msgId == L2_CLI_GET_UE_KPI_REQ) {
+            kpiCounterName.append("rnti; ");
+            kpiCounterName.append("time; ");
+            kpiCounterName.append("imsi; ");
             kpiCounterName.append("CrcCorrect; ");
             kpiCounterName.append("CrcError; ");
+            kpiCounterName.append("harqACKRecvd; ");
+            kpiCounterName.append("harqNACKRecvd; ");
+            kpiCounterName.append("harqDTXRecvd; ");
+            kpiCounterName.append("contHarqVal; ");
         }
 #else 
         kpiCounterName.append("ChannReq; ");
@@ -242,8 +250,8 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
     int totalLen = 0;
     int singleLen = 0;
 
-    UInt32* kpiValArray = (UInt32*)m_recvBuffer;
     if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        UInt32* kpiValArray = (UInt32*)m_recvBuffer;
 #ifndef KPI_L3
         m_targetVersion = *kpiValArray;
         if (m_targetVersion < VERSION) {
@@ -325,28 +333,112 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             qmss->send(m_recvBuffer, msg->tLen);
 #endif
         }
-    } else if (m_msgId == L2_CLI_GET_CRC_KPI_REQ) {
-        if (length % 8 != 0) {
+    } else if (m_msgId == L2_CLI_GET_UE_KPI_REQ) {
+        if ((length % UE_COUNTER_SIZE != 0) || (length > UE_KPI_MSG_LENGTH)) {
             LOG_ERROR(KPI_LOGGER_NAME, "[%s],Invalid length = %d\n", __func__, length);
             return;
         }
-        char kpiChar[8192];
-        UInt32 numUe = length / (sizeof(UInt32) * 2);
-        UInt32 n = 0;
+        time_t timep;   
+        struct tm *p;     
+        time(&timep);   
+        p = localtime(&timep);
+
+        char kpiChar[19456];
+        UInt32 numUe = length / UE_COUNTER_SIZE;
+        UInt32 tempLen = 0;
+        char imsiStr[16];
+        UeCounter* ueCounter;
+        LteCounter* accumulateCounter = (LteCounter*)m_prevKpiArray;
+        LteCounter* deltaCounter = (LteCounter*)m_deltaKpiArray;
+        deltaCounter->crcValid      = 0;
+        deltaCounter->crcError      = 0;
+        deltaCounter->harqAckRecvd  = 0;
+        deltaCounter->harqNackRecvd = 0;
+        deltaCounter->harqDtx       = 0;
         for (UInt32 i=0; i<numUe; i++) {
             m_index++;
             singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
             totalLen += singleLen;
-            singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[n++]);
+
+            singleLen = sprintf(kpiChar + totalLen, "%02d%02d%02d%02d%02d;", ( 1 + p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);
             totalLen += singleLen;
-            singleLen = sprintf(kpiChar + totalLen, "%8d; ", kpiValArray[n++]);
+
+            ueCounter = (UeCounter*)(m_recvBuffer + tempLen);
+            tempLen += sizeof(UeCounter);
+
+            // write rnti
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->rnti);
+            totalLen += singleLen;
+
+            // write imsi
+            for(UInt32 j=0; j<7; j++) {
+                imsiStr[j*2] = (ueCounter->imsi[j] >> 4) + 0x30;
+                imsiStr[j*2 + 1] = (ueCounter->imsi[j] & 0x0f) + 0x30;
+                // singleLen = sprintf(kpiChar + totalLen, "%d", (ueCounter->imsi[j] >> 4));
+                // totalLen += singleLen;
+                // singleLen = sprintf(kpiChar + totalLen, "%d", (ueCounter->imsi[j] & 0x0f));
+                // totalLen += singleLen;
+            }
+            imsiStr[14] = ueCounter->imsi[7] + 0x30;
+            imsiStr[15] = '\0';
+            // singleLen = sprintf(kpiChar + totalLen, "%d;", ueCounter->imsi[7]);
+            // totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%s;", imsiStr);
+            totalLen += singleLen; 
+            
+            LOG_DBG(KPI_LOGGER_NAME, "[%s], rnti: %d, imsi: %s\n", __func__, ueCounter->rnti, imsiStr);
+
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->crcCorrect);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->crcError);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->harqACKRecvd);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->harqNACKRecvd);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->harqDTXRecvd);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->contHarqVal);
             totalLen += singleLen;
             singleLen = sprintf(kpiChar + totalLen, "\n");
             totalLen += singleLen;
+
+            // string imsi(imsiStr);
+
+            if (gTargetImsi.compare(imsiStr) == 0) {
+                printf("---------------------\n");
+                printf("NO.:            %d\n", m_index);
+                printf("RNTI:           %d\n", ueCounter->rnti);
+                printf("crcCorrect:     %d\n", ueCounter->crcCorrect);
+                printf("crcError:       %d\n", ueCounter->crcError);
+                printf("harqACKRecvd:   %d\n", ueCounter->harqACKRecvd);
+                printf("harqNACKRecvd:  %d\n", ueCounter->harqNACKRecvd);
+                printf("harqDTXRecvd:   %d\n", ueCounter->harqDTXRecvd);
+                printf("contHarqVal:    %d\n", ueCounter->contHarqVal);
+            }
+
+            deltaCounter->crcValid      += ueCounter->crcCorrect;
+            deltaCounter->crcError      += ueCounter->crcError;
+            deltaCounter->harqAckRecvd  += ueCounter->harqACKRecvd;
+            deltaCounter->harqNackRecvd += ueCounter->harqNACKRecvd;
+            deltaCounter->harqDtx       += ueCounter->harqDTXRecvd;
         }
+
+        deltaCounter->numUe = m_index - accumulateCounter->numUe;
+        accumulateCounter->numUe            = m_index;
+        accumulateCounter->crcValid         += deltaCounter->crcValid;
+        accumulateCounter->crcError         += deltaCounter->crcError;
+        accumulateCounter->harqAckRecvd     += deltaCounter->harqAckRecvd;
+        accumulateCounter->harqNackRecvd    += deltaCounter->harqNackRecvd;
+        accumulateCounter->harqDtx          += deltaCounter->harqDtx;
+
         if (m_file) {
             int writeBytes = 0;
             m_file->write((const char*)kpiChar, totalLen, writeBytes);
+        }
+
+        if (gTargetImsi.empty()) {
+            displayCounter((void*)accumulateCounter);
         }
     }
 }
@@ -369,7 +461,7 @@ void KpiWorker::displayCounter(void* counter) {
     GSMCounter* accumulateCounter = (GSMCounter*)m_prevKpiArray;
     GSMCounter* deltaCounter = (GSMCounter*)m_deltaKpiArray;
 #endif
-    char dispChar[4096];
+    char dispChar[7168];
     int sumLength = 0;
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
@@ -413,27 +505,35 @@ void KpiWorker::displayCounter(void* counter) {
 //     printf("--------------------------------------\n");
 
 #ifndef GSM
-    // varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->activeUe, deltaCounter->activeUe);
-    // sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "MSG2            %10d  %8d\n", accumulateCounter->rar, deltaCounter->rar);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "MSG3            %10d  %8d\n", accumulateCounter->msg3, deltaCounter->msg3);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "MSG3 Expired    %10d  %8d\n", accumulateCounter->msg3Expired, deltaCounter->msg3Expired);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Conten Resol    %10d  %8d\n", accumulateCounter->contResol, deltaCounter->contResol);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        // varLength = sprintf(dispChar + sumLength, "Active UE       %10d  %8d\n", accumulateCounter->numUe, deltaCounter->numUe);
+        // sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RACH IND        %10d  %8d\n", accumulateCounter->rach, deltaCounter->rach);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "MSG2            %10d  %8d\n", accumulateCounter->rar, deltaCounter->rar);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "MSG3            %10d  %8d\n", accumulateCounter->msg3, deltaCounter->msg3);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "MSG3 Expired    %10d  %8d\n", accumulateCounter->msg3Expired, deltaCounter->msg3Expired);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Conten Resol    %10d  %8d\n", accumulateCounter->contResol, deltaCounter->contResol);
+        sumLength += varLength;
+    }
+    if (m_msgId == L2_CLI_GET_UE_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "Num UE          %10d  %8d\n", accumulateCounter->numUe, deltaCounter->numUe);
+        sumLength += varLength;
+    }
     varLength = sprintf(dispChar + sumLength, "CRC Correct     %10d  %8d\n", accumulateCounter->crcValid, deltaCounter->crcValid);
     sumLength += varLength;
     varLength = sprintf(dispChar + sumLength, "CRC Error       %10d  %8d\n", accumulateCounter->crcError, deltaCounter->crcError);
     sumLength += varLength;    
 #ifndef KPI_L3
-    varLength = sprintf(dispChar + sumLength, "HARQ ACK Sent   %10d  %8d\n", accumulateCounter->harqAckSent, deltaCounter->harqAckSent);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ NACK Sent  %10d  %8d\n", accumulateCounter->harqNackSent, deltaCounter->harqNackSent);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "HARQ ACK Sent   %10d  %8d\n", accumulateCounter->harqAckSent, deltaCounter->harqAckSent);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "HARQ NACK Sent  %10d  %8d\n", accumulateCounter->harqNackSent, deltaCounter->harqNackSent);
+        sumLength += varLength;
+    }
 #endif
     varLength = sprintf(dispChar + sumLength, "HARQ ACK Rcvd   %10d  %8d\n", accumulateCounter->harqAckRecvd, deltaCounter->harqAckRecvd);
     sumLength += varLength;
@@ -445,48 +545,52 @@ void KpiWorker::displayCounter(void* counter) {
     // varLength = sprintf(dispChar + sumLength, "HARQ Other      %10d  %8d\n", accumulateCounter->harqOther, deltaCounter->harqOther);
     // sumLength += varLength;
 #ifdef DEBUG_DL_PHY  
-    varLength = sprintf(dispChar + sumLength, "HARQ ACK PUCCH  %10d  %8d\n", accumulateCounter->harqAckPUCCH, deltaCounter->harqAckPUCCH);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ NACK PUCCH  %10d  %8d\n", accumulateCounter->harqNackPUCCH, deltaCounter->harqNackPUCCH);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "HARQ DTX PUCCH  %10d  %8d\n", accumulateCounter->harqDtxPUCCH, deltaCounter->harqDtxPUCCH);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 0 TB         %10d  %8d\n", accumulateCounter->dlTB[0], deltaCounter->dlTB[0]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 1 TB         %10d  %8d\n", accumulateCounter->dlTB[1], deltaCounter->dlTB[1]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 3 TB         %10d  %8d\n", accumulateCounter->dlTB[3], deltaCounter->dlTB[3]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 4 TB         %10d  %8d\n", accumulateCounter->dlTB[4], deltaCounter->dlTB[4]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 5 TB         %10d  %8d\n", accumulateCounter->dlTB[5], deltaCounter->dlTB[5]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 6 TB         %10d  %8d\n", accumulateCounter->dlTB[6], deltaCounter->dlTB[6]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 8 TB         %10d  %8d\n", accumulateCounter->dlTB[8], deltaCounter->dlTB[8]);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "SF 9 TB         %10d  %8d\n", accumulateCounter->dlTB[9], deltaCounter->dlTB[9]);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "HARQ ACK PUCCH  %10d  %8d\n", accumulateCounter->harqAckPUCCH, deltaCounter->harqAckPUCCH);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "HARQ NACK PUCCH  %10d  %8d\n", accumulateCounter->harqNackPUCCH, deltaCounter->harqNackPUCCH);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "HARQ DTX PUCCH  %10d  %8d\n", accumulateCounter->harqDtxPUCCH, deltaCounter->harqDtxPUCCH);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 0 TB         %10d  %8d\n", accumulateCounter->dlTB[0], deltaCounter->dlTB[0]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 1 TB         %10d  %8d\n", accumulateCounter->dlTB[1], deltaCounter->dlTB[1]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 3 TB         %10d  %8d\n", accumulateCounter->dlTB[3], deltaCounter->dlTB[3]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 4 TB         %10d  %8d\n", accumulateCounter->dlTB[4], deltaCounter->dlTB[4]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 5 TB         %10d  %8d\n", accumulateCounter->dlTB[5], deltaCounter->dlTB[5]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 6 TB         %10d  %8d\n", accumulateCounter->dlTB[6], deltaCounter->dlTB[6]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 8 TB         %10d  %8d\n", accumulateCounter->dlTB[8], deltaCounter->dlTB[8]);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "SF 9 TB         %10d  %8d\n", accumulateCounter->dlTB[9], deltaCounter->dlTB[9]);
+        sumLength += varLength;
+    }
 #endif
 #endif
-    varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RRC Setup       %10d  %8d\n", accumulateCounter->rrcSetup, deltaCounter->rrcSetup);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RRC Reject      %10d  %8d\n", accumulateCounter->rrcConnReject, deltaCounter->rrcConnReject);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RRC Setup Compl %10d  %8d\n", accumulateCounter->rrcSetupComplete, deltaCounter->rrcSetupComplete);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Identity Req    %10d  %8d\n", accumulateCounter->identityReq, deltaCounter->identityReq);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Identity Resp   %10d  %8d\n", accumulateCounter->identityResp, deltaCounter->identityResp);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "TAU Reject      %10d  %8d\n", accumulateCounter->tauReject, deltaCounter->tauReject);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "Attach Reject   %10d  %8d\n", accumulateCounter->attachReject, deltaCounter->attachReject);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "RRC Request     %10d  %8d\n", accumulateCounter->rrcReq, deltaCounter->rrcReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RRC Setup       %10d  %8d\n", accumulateCounter->rrcSetup, deltaCounter->rrcSetup);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RRC Reject      %10d  %8d\n", accumulateCounter->rrcConnReject, deltaCounter->rrcConnReject);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RRC Setup Compl %10d  %8d\n", accumulateCounter->rrcSetupComplete, deltaCounter->rrcSetupComplete);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Identity Req    %10d  %8d\n", accumulateCounter->identityReq, deltaCounter->identityReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Identity Resp   %10d  %8d\n", accumulateCounter->identityResp, deltaCounter->identityResp);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "TAU Reject      %10d  %8d\n", accumulateCounter->tauReject, deltaCounter->tauReject);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Attach Reject   %10d  %8d\n", accumulateCounter->attachReject, deltaCounter->attachReject);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
+        sumLength += varLength;
+    }
 
     // printf("%s\n", dispChar);
 
@@ -530,30 +634,26 @@ void KpiWorker::displayCounter(void* counter) {
 
     varLength = sprintf(dispChar + sumLength, "\n");
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "MSG3/RACH:                 %f\n", msg3DivRach);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "MSG3/RACH:                 %f\n", msg3DivRach);
+        sumLength += varLength;
+    }
     varLength = sprintf(dispChar + sumLength, "HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "CrcValid/UlDataInd:           %f\n", crcValidDivUlInd);
+    varLength = sprintf(dispChar + sumLength, "CrcValid/UlDataInd:        %f\n", crcValidDivUlInd);
     sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RrcSetup/RrcReq:           %f\n", setupDivReq);
-    sumLength += varLength;
-    varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
-    sumLength += varLength;
+    if (m_msgId == L2_CLI_GET_KPI_REQ) {
+        varLength = sprintf(dispChar + sumLength, "RrcSetup/RrcReq:           %f\n", setupDivReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
+        sumLength += varLength;
 #ifndef KPI_L3
-    varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
-    sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
+        sumLength += varLength;
 #endif
-    varLength = sprintf(dispChar + sumLength, "IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
-    sumLength += varLength;
-
-    // printf("MSG3/RACH:                 %f\n", msg3DivRach);
-    // // printf("HarqAck/HarqReq:           %f\n", harqAckDivHarqReq);
-    // printf("HarqAck/HarqInd:           %f\n", harqAckDivHarqInd);
-    // printf("RrcSetup/RrcReq:           %f\n", setupDivReq);
-    // printf("RrcSetupCompl/RrcSetup:    %f\n", setupComplDivSetup);
-    // printf("RrcSetupCompl/ContResol:   %f\n", setupComplDivContResol);
-    // printf("IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);    
+        varLength = sprintf(dispChar + sumLength, "IdentityRsp/IdentityReq:   %f\n", idRspDivIdReq);
+        sumLength += varLength;
+    }
        
     if (gShowAll || (m_writeOption == 4)) {
         static UInt8 count = 0;
@@ -566,25 +666,21 @@ void KpiWorker::displayCounter(void* counter) {
             sumLength += varLength;
             varLength = sprintf(dispChar + sumLength, "Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
             sumLength += varLength;
-            // printf("\n");
-            // printf("Max Collected IMSI (%ds):    %d\n", gPeriod/1000, maxIdResp);
         } else {
             count++;
         }
 
 #ifndef KPI_L3
-        varLength = sprintf(dispChar + sumLength, "\n");
-        sumLength += varLength;
-        varLength = sprintf(dispChar + sumLength, "ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
-        sumLength += varLength;
-        varLength = sprintf(dispChar + sumLength, "ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
-        sumLength += varLength;
-        varLength = sprintf(dispChar + sumLength, "ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
-        sumLength += varLength;
-        // printf("\n");
-        // printf("ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->activeUe, accumulateCounter->maxActiveMacUe);
-        // printf("ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
-        // printf("ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+        if (m_msgId == L2_CLI_GET_KPI_REQ) {
+            varLength = sprintf(dispChar + sumLength, "\n");
+            sumLength += varLength;
+            varLength = sprintf(dispChar + sumLength, "ActiveMacUE/MaxActiveMacUE:     %03d/%03d\n", accumulateCounter->numUe, accumulateCounter->maxActiveMacUe);
+            sumLength += varLength;
+            varLength = sprintf(dispChar + sumLength, "ActiveRlcUE/MaxActiveRlcUE:     %03d/%03d\n", accumulateCounter->activeRlcUe, accumulateCounter->maxActiveRlcUe);
+            sumLength += varLength;
+            varLength = sprintf(dispChar + sumLength, "ActivePdcpUE/MaxActivePdcpUE:   %03d/%03d\n", accumulateCounter->activePdcpUe, accumulateCounter->maxActivePdcpUe);
+            sumLength += varLength;
+        }
 #endif
     }
 
@@ -594,8 +690,6 @@ void KpiWorker::displayCounter(void* counter) {
         sumLength += varLength;
         varLength = sprintf(dispChar + sumLength, "NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
         sumLength += varLength;
-        // printf("--------------------------------------\n");
-        // printf("NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
     }
 #endif
 

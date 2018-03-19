@@ -11,9 +11,10 @@ extern int gPeriod;
 extern bool gShowAll;
 extern bool gShowPhyKpi;
 extern std::string gKpiDirectory;
+extern std::string gTargetImsi;
 
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
-#define MAC_RECV_MSG_BUFFER_LENGTH 2048
+#define MAC_RECV_MSG_BUFFER_LENGTH 4096
 
 typedef unsigned int UInt32;
 typedef signed int SInt32;
@@ -37,7 +38,7 @@ typedef unsigned char UInt8;
 typedef enum {
 	L2_CLI_GET_KPI_REQ = 0x01,
     L3_CLI_GET_KPI_REQ = 0x02,
-    L2_CLI_GET_CRC_KPI_REQ = 0x03
+    L2_CLI_GET_UE_KPI_REQ = 0x03
 } KPIReqAPI;
 
 typedef enum {
@@ -98,7 +99,7 @@ typedef struct {
 } SetSIMParamReq;
 
 typedef struct {	
-    UInt32 activeUe;
+    UInt32 numUe;
     UInt32 rach;
     UInt32 rar;
     UInt32 msg3;
@@ -152,6 +153,19 @@ typedef struct {
 #endif
 #endif
 } LteCounter;
+
+typedef struct {
+    UInt16 rnti; 
+    UInt8 crcCorrect;
+    UInt8 crcError;
+    UInt8 harqACKRecvd;
+    UInt8 harqNACKRecvd;
+    UInt8 harqDTXRecvd;
+    UInt8 contHarqVal;
+    UInt8 imsi[8];
+} UeCounter;
+#define UE_COUNTER_SIZE 16 // UeCounter plus 2byte rnti
+#define UE_KPI_MSG_LENGTH (UE_COUNTER_SIZE*256)
 
 typedef struct {
 

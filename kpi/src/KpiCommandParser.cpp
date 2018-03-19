@@ -27,6 +27,7 @@ string gServerIp = "192.168.1.166";
 unsigned short gServerPort = 50001;
 int gPeriod = 10000;
 string gKpiDirectory = "/OAM";
+string gTargetImsi = "";
 
 bool gShowAll = false;
 bool gShowPhyKpi = false;
@@ -61,8 +62,8 @@ bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
                 gShowAll = true;
             } else if (option.compare("--phy") == 0) {
                 gShowPhyKpi = true;
-            } else if (option.compare("--crc") == 0) {
-                msgId = L2_CLI_GET_CRC_KPI_REQ;
+            } else if (option.compare("--ue") == 0) {
+                msgId = L2_CLI_GET_UE_KPI_REQ;
             }  else {
                 if (i<argc) {
                     parseMinorOptions(option, string(argv[i++]));
@@ -90,14 +91,17 @@ bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
 void KpiCommandParser::parseMinorOptions(string option, string value) {
     if (option.compare("-w") == 0) {
         gWriteOption = Util::s2i(value);
-        cout << "gWriteOption = " << gWriteOption << endl;
+        cout << "Write Option: " << gWriteOption << endl;
     } else if (option.compare("-t") == 0) {
         gPeriod = Util::s2i(value) * 1000;
-        cout << "gPeriod = " << gPeriod << endl;
+        cout << "Period: " << gPeriod << endl;
     } else if (option.compare("-d") == 0) {
         gKpiDirectory = value;
         cout << "gKpiDirectory = " << gKpiDirectory << endl;
-    } else {
+    } else if (option.compare("-imsi") == 0) {
+        gTargetImsi = value;
+        cout << "Tracing IMSI: " << gTargetImsi << endl;
+    }  else {
         cout << "Invalid option: " << option << endl;
         exit(0);
     }
@@ -139,9 +143,10 @@ void KpiCommandParser::showMinorUsage() {
     cout << "     default: " << KPI_DEFAULT_WRITE_OPTION << endl;
     cout << "-t : The period (in seconds) for sending/displaying KPI data, default: " << gPeriod/1000 << endl;
     cout << "-d : The directory for kpi file saved to, default is /OAM/" << endl;
+    cout << "-imsi : The imsi to be traced, example: 460001234567890" << endl;
     cout << "--debug : enable debug log for this kpi tool" << endl;
     cout << "--all :   show all kpi details if display on console is enabled" << endl;
-    cout << "--crc : only get ul crc kpi data" << endl;
+    cout << "--ue  :   only get ul crc kpi data" << endl;
     // cout << "--phy :   show phy kpi" << endl;
     cout << endl;
 
