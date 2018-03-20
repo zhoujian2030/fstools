@@ -355,6 +355,8 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         deltaCounter->harqAckRecvd  = 0;
         deltaCounter->harqNackRecvd = 0;
         deltaCounter->harqDtx       = 0;
+        deltaCounter->identityResp  = 0;
+        string invalidImsi("000000000000000");
         for (UInt32 i=0; i<numUe; i++) {
             m_index++;
             singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
@@ -385,6 +387,10 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             // totalLen += singleLen;
             singleLen = sprintf(kpiChar + totalLen, "%s;", imsiStr);
             totalLen += singleLen; 
+
+            if (invalidImsi.compare(imsiStr) != 0) {
+                deltaCounter->identityResp++;
+            }
             
             LOG_DBG(KPI_LOGGER_NAME, "[%s], rnti: %d, imsi: %s\n", __func__, ueCounter->rnti, imsiStr);
 
@@ -696,6 +702,7 @@ void KpiWorker::displayCounter(void* counter) {
     if (m_writeOption == 4) {
         int writeBytes = 0;
         m_resultFile->seek(F_SEEK_BEGIN);
+        m_resultFile->truncate(0);
         m_resultFile->write(dispChar, sumLength, writeBytes);
     } else {
         printf("%s\n", dispChar);

@@ -103,6 +103,7 @@ namespace cm {
         virtual int read(char* theBuffer, int buffSize, int& numOfBytesRead);
         virtual long seek(long thePos);
         virtual void close();
+        virtual void truncate(int size);
 
     protected:
         void open();

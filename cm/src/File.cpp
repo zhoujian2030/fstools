@@ -213,3 +213,8 @@ void File::close() {
         m_fd = -1;
     }
 }
+
+// -----------------------------------------
+void File::truncate(int size) {
+    ftruncate(m_fd, size);
+}
