@@ -163,9 +163,12 @@ typedef struct {
     UInt8 harqDTXRecvd;
     UInt8 contHarqVal;
     UInt8 imsi[8];
+    UInt16 rrcEstabDuration;
+    UInt16 idRspDuration;
+    UInt16 ueCtxDuration;
 } UeCounter;
-#define UE_COUNTER_SIZE 16 // UeCounter plus 2byte rnti
-#define UE_KPI_MSG_LENGTH (UE_COUNTER_SIZE*256)
+#define UE_COUNTER_SIZE 22 // UeCounter plus 2 bytes rnti plus 6 bytes duration
+#define UE_KPI_MSG_LENGTH 4096 //(UE_COUNTER_SIZE*256)
 
 typedef struct {
 

@@ -178,8 +178,8 @@ unsigned long KpiWorker::run() {
 
 #endif
         } else if (m_msgId == L2_CLI_GET_UE_KPI_REQ) {
-            kpiCounterName.append("rnti; ");
             kpiCounterName.append("time; ");
+            kpiCounterName.append("rnti; ");
             kpiCounterName.append("imsi; ");
             kpiCounterName.append("CrcCorrect; ");
             kpiCounterName.append("CrcError; ");
@@ -187,6 +187,9 @@ unsigned long KpiWorker::run() {
             kpiCounterName.append("harqNACKRecvd; ");
             kpiCounterName.append("harqDTXRecvd; ");
             kpiCounterName.append("contHarqVal; ");
+            kpiCounterName.append("rrcEstDura; ");
+            kpiCounterName.append("idRspDura; ");
+            kpiCounterName.append("ueCtxDura; ");
         }
 #else 
         kpiCounterName.append("ChannReq; ");
@@ -366,7 +369,7 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             totalLen += singleLen;
 
             ueCounter = (UeCounter*)(m_recvBuffer + tempLen);
-            tempLen += sizeof(UeCounter);
+            tempLen += UE_COUNTER_SIZE;
 
             // write rnti
             singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->rnti);
@@ -405,6 +408,12 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->harqDTXRecvd);
             totalLen += singleLen;
             singleLen = sprintf(kpiChar + totalLen, "%3d;", ueCounter->contHarqVal);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%6d;", ueCounter->rrcEstabDuration);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%6d;", ueCounter->idRspDuration);
+            totalLen += singleLen;
+            singleLen = sprintf(kpiChar + totalLen, "%6d;", ueCounter->ueCtxDuration);
             totalLen += singleLen;
             singleLen = sprintf(kpiChar + totalLen, "\n");
             totalLen += singleLen;
