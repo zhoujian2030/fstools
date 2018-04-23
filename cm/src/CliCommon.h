@@ -162,7 +162,8 @@ typedef struct {
     UInt8 harqNACKRecvd;
     UInt8 harqDTXRecvd;
     UInt8 contHarqVal;
-    UInt8 imsi[8];
+    UInt32 imsi0;
+    UInt32 imsi1;
     UInt16 rrcEstabDuration;
     UInt16 idRspDuration;
     UInt16 ueCtxDuration;

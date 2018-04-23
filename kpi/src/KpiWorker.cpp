@@ -22,6 +22,8 @@ using namespace std;
 #define VERSION         1005
 #define VERSION_LEN     4
 
+#define HTONL(A) ((((UInt32)(A) & 0xff000000) >> 24) | (((UInt32)(A) & 0x00ff0000) >> 8 ) | (((UInt32)(A) & 0x0000ff00) << 8 ) | (((UInt32)(A) & 0x000000ff) << 24))
+
 // ----------------------------------------
 #ifdef KPI_L3
 KpiWorker::KpiWorker(std::string workerName, UdpSocket* udpServerSocket)
@@ -359,7 +361,7 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         deltaCounter->harqNackRecvd = 0;
         deltaCounter->harqDtx       = 0;
         deltaCounter->identityResp  = 0;
-        string invalidImsi("000000000000000");
+        // string invalidImsi("000000000000000");
         for (UInt32 i=0; i<numUe; i++) {
             m_index++;
             singleLen = sprintf(kpiChar + totalLen, "%6d; ", m_index);
@@ -376,22 +378,18 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
             totalLen += singleLen;
 
             // write imsi
-            for(UInt32 j=0; j<7; j++) {
-                imsiStr[j*2] = (ueCounter->imsi[j] >> 4) + 0x30;
-                imsiStr[j*2 + 1] = (ueCounter->imsi[j] & 0x0f) + 0x30;
-                // singleLen = sprintf(kpiChar + totalLen, "%d", (ueCounter->imsi[j] >> 4));
-                // totalLen += singleLen;
-                // singleLen = sprintf(kpiChar + totalLen, "%d", (ueCounter->imsi[j] & 0x0f));
-                // totalLen += singleLen;
-            }
-            imsiStr[14] = ueCounter->imsi[7] + 0x30;
-            imsiStr[15] = '\0';
-            // singleLen = sprintf(kpiChar + totalLen, "%d;", ueCounter->imsi[7]);
-            // totalLen += singleLen;
+            // for(UInt32 j=0; j<7; j++) {
+            //     imsiStr[j*2] = (ueCounter->imsi[j] >> 4) + 0x30;
+            //     imsiStr[j*2 + 1] = (ueCounter->imsi[j] & 0x0f) + 0x30;
+            // }
+            // imsiStr[14] = ueCounter->imsi[7] + 0x30;
+            // imsiStr[15] = '\0';
+            sprintf(imsiStr, "%07x%08x", ueCounter->imsi0, ueCounter->imsi1);
+
             singleLen = sprintf(kpiChar + totalLen, "%s;", imsiStr);
             totalLen += singleLen; 
 
-            if (invalidImsi.compare(imsiStr) != 0) {
+            if ((ueCounter->imsi0 != 0) || (ueCounter->imsi1 != 0)) {
                 deltaCounter->identityResp++;
             }
             
