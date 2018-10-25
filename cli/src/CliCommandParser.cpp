@@ -146,6 +146,23 @@ bool CliCommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
                     LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Max UE scheduled yet\n", __func__);
                     return false;
                 }
+            } else if (m_subTgtType == SUB_TGT_TARGET_UE_ID) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(L2_CLI_SET_TARGET_UE);
+                    length += sizeof(UInt32); // for ueIndex
+                    length += sizeof(UInt32); // for interval
+                    msg->length = htons(length);
+                    UInt32* targetUeId = (UInt32*)msg->msgBody;
+                    int* value = (int*)m_cmdContent;
+                    *targetUeId = *value;
+                    UInt32* interval = targetUeId+1;
+                    *interval = *(value+1);
+                    cout << "Set Target UE ID: " << *targetUeId << ", interval = " << *interval << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Max UE scheduled yet\n", __func__);
+                    return false;
+                }
             } else {
                 showUsage();
                 LOG_DBG(CLI_LOGGER_NAME, "[%s], unsupported command parameters\n", __func__);
@@ -226,7 +243,9 @@ bool CliCommandParser::parseParam(std::string option, int index) {
             m_subTgtType = SUB_TGT_RACH_THR;
         } else if (option.compare(SUB_TGT_TYPE_MAX_UE_SCHED_NAME) == 0) {
             m_subTgtType = SUB_TGT_MAX_UE_SCHED;
-        } else {
+        } else if (option.compare(SUB_TGT_TYPE_TARGET_UE_NAME) == 0) {
+            m_subTgtType = SUB_TGT_TARGET_UE_ID;
+        }  else {
             if (m_tgtType == TGT_SIM) {
                 m_numUe = s2i(option);
             } else {
@@ -276,9 +295,20 @@ bool CliCommandParser::parseParam(std::string option, int index) {
             int* maxUeSched = (int*)m_cmdContent;
             *maxUeSched = s2i(option);
             m_isValid = true;
+        } else if (m_subTgtType == SUB_TGT_TARGET_UE_ID) {
+            int* targetUeId = (int*)m_cmdContent;
+            *targetUeId = s2i(option);
+            int* interval = (int*)(m_cmdContent + 4);
+            *interval = 1;
+            m_isValid = true;
         } else if (m_tgtType == TGT_SIM) {
             m_numTestTime = s2i(option);
             m_isValid = true;
+        }
+    } else if (index == 5) {
+        if (m_subTgtType == SUB_TGT_TARGET_UE_ID) {
+            int* interval = (int*)(m_cmdContent + 4);
+            *interval = s2i(option);
         }
     } else {
         return false;
@@ -303,5 +333,6 @@ void CliCommandParser::showUsage() {
     cout << "  cli set l2 rat2type [distributed/localized]" << endl; 
     cout << "  cli set l2 rachthr  [1, 2, 3, ...]" << endl; 
     cout << "  cli set l2 maxuesched  [1, 2, 3, 4]" << endl; 
+    cout << "  cli set l2 targetue  [0, 1, 2, ..., 254] [1, 2, 3, ...]" << endl; 
     cout << "  cli get kpi [kpi options]" << endl; 
 }
