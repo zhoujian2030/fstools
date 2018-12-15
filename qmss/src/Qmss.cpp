@@ -12,8 +12,8 @@ bool Qmss::m_isQmssInited = false;
 // --------------------------------------
 Qmss::Qmss(int sendQId, int recvQId) 
 {
-    m_sendQId = (Qmss_HANDLE)sendQId;
-    m_recvQId = (Qmss_HANDLE)recvQId;
+    m_sendQId = sendQId;
+    m_recvQId = recvQId;
 }
 
 // --------------------------------------
@@ -31,18 +31,26 @@ void Qmss::initQmss() {
 
 // --------------------------------------
 void Qmss::updateDstQmssId(int sendQId) {
-    m_sendQId = (Qmss_HANDLE)sendQId;
+    m_sendQId = sendQId;
 }
 
 // --------------------------------------
 int Qmss::send(char* msgBuffer, int length) {
+#ifndef TWO_CARRIER
+    return Qmss_SendData((Qmss_HANDLE)m_sendQId, (void*)msgBuffer, length);
+#else
     return Qmss_SendData(m_sendQId, (void*)msgBuffer, length);
+#endif
 }
 
 // --------------------------------------
 int Qmss::recv(char* msgBuffer) {
     if (count() > 0) {
+#ifndef TWO_CARRIER
+        return Qmss_RecsData((Qmss_HANDLE)m_recvQId, (void*)msgBuffer);
+#else
         return Qmss_RecsData(m_recvQId, (void*)msgBuffer);
+#endif
     }
 
     return 0;
@@ -50,5 +58,9 @@ int Qmss::recv(char* msgBuffer) {
 
 // --------------------------------------
 int Qmss::count() {
+#ifndef TWO_CARRIER
+    return Qmss_GetQueueEntryCount((Qmss_HANDLE)m_recvQId);
+#else
     return Qmss_GetQueueEntryCount(m_recvQId);
+#endif
 }

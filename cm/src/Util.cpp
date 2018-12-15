@@ -24,6 +24,12 @@ int Util::s2i(string theString) {
     return result;
 }
 
+string Util::i2s(int value){
+    ostringstream oss;  
+    oss << value;
+    return oss.str();  
+}
+
 int Util::installSignalHandler(int signo, sighandler_t handler) {
     if (signal(signo, handler) == SIG_ERR) {
         return JERROR;

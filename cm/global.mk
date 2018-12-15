@@ -10,6 +10,16 @@ ifeq ($(PLATFORM), arm)
 CFLAGS = -Wall -g -Os -fPIC
 endif
 
+ifeq ($(NEW_QMSS_DRIVER), TDD_TRUE)
+CFLAGS += -DTWO_CARRIER -DTDD
+else
+
+ifeq ($(NEW_QMSS_DRIVER), FDD_TRUE)
+CFLAGS += -DTWO_CARRIER -DFDD
+endif 
+
+endif
+
 LFLAGS = -lrt
 
 .%.d: %.cpp

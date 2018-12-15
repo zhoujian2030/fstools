@@ -19,9 +19,6 @@ using namespace net;
 #endif
 using namespace std;
 
-#define VERSION         1005
-#define VERSION_LEN     4
-
 #define HTONL(A) ((((UInt32)(A) & 0xff000000) >> 24) | (((UInt32)(A) & 0x00ff0000) >> 8 ) | (((UInt32)(A) & 0x0000ff00) << 8 ) | (((UInt32)(A) & 0x000000ff) << 24))
 
 // ----------------------------------------
@@ -42,7 +39,7 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
 
     m_file = 0;
 
-    m_targetVersion = VERSION;
+    m_targetVersion = KPI_VERSION;
 
 #ifdef USE_UDP
     m_udpSocket = 0;
@@ -82,6 +79,7 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
         m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
 #else
         m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
+        // m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
 #endif
         m_resultFile = new File(m_resultFilename, FILE_CREATE, FILE_WRITE_ONLY);
         LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_resultFilename.c_str());
@@ -259,18 +257,18 @@ void KpiWorker::handleMacKpiResponse(UInt32 length) {
         UInt32* kpiValArray = (UInt32*)m_recvBuffer;
 #ifndef KPI_L3
         m_targetVersion = *kpiValArray;
-        if (m_targetVersion < VERSION) {
+        if (m_targetVersion < KPI_VERSION) {
             system("clear");
             if (m_targetVersion < 1000) {
-                printf("ERROR: version[%d] not upported\n", VERSION);
+                printf("ERROR: version[%d] not upported\n", KPI_VERSION);
             } else {
-                printf("ERROR: version[%d] mismatch, please downgrade to version[%d]\n", VERSION, m_targetVersion);
+                printf("ERROR: version[%d] mismatch, please downgrade to version[%d]\n", KPI_VERSION, m_targetVersion);
             }        
             exit(0);
         }
         kpiValArray++;
 
-        UInt32 numKpi = (length - VERSION_LEN) / sizeof(UInt32);
+        UInt32 numKpi = (length - KPI_VERSION_LEN) / sizeof(UInt32);
 #else 
         UInt32 numKpi = length / sizeof(UInt32);
 #endif
@@ -479,7 +477,16 @@ void KpiWorker::displayCounter(void* counter) {
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
 
-    varLength = sprintf(dispChar + sumLength, "Version: %d | ", VERSION);
+    varLength = sprintf(dispChar + sumLength, "Version: %d", KPI_VERSION);
+    sumLength += varLength;
+#if (defined TDD) 
+    varLength = sprintf(dispChar + sumLength, "%s", "-TDD | ");
+#elif (defined FDD)
+    varLength = sprintf(dispChar + sumLength, "%s", "-FDD | ");
+#else 
+    varLength = sprintf(dispChar + sumLength, "%s", " | ");
+#endif 
+
     sumLength += varLength;
     // varLength = sprintf(dispChar + sumLength, "-------------\n");
     // sumLength += varLength;
@@ -503,7 +510,7 @@ void KpiWorker::displayCounter(void* counter) {
     varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");
     sumLength += varLength;
 
-//     printf("Version: %d\n", VERSION);
+//     printf("Version: %d\n", KPI_VERSION);
 //     printf("-------------\n");
 //     printf("Date: %04d-%02d-%02d %02d:%02d:%02d\n", (1900 + p->tm_year), ( 1 + p->tm_mon), p->tm_mday,(p->tm_hour + 12), p->tm_min, p->tm_sec); 
 // #ifdef USE_UDP
@@ -698,10 +705,10 @@ void KpiWorker::displayCounter(void* counter) {
     }
 
 #ifndef KPI_L3
-    if (VERSION != m_targetVersion) {
+    if (KPI_VERSION != m_targetVersion) {
         varLength = sprintf(dispChar + sumLength, "--------------------------------------\n");
         sumLength += varLength;
-        varLength = sprintf(dispChar + sumLength, "NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", VERSION, m_targetVersion);
+        varLength = sprintf(dispChar + sumLength, "NOTE: Version[%d] is too old, please upgrade to Version[%d]\n", KPI_VERSION, m_targetVersion);
         sumLength += varLength;
     }
 #endif

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <string>
 
 #include "Qmss.h"
 #include "CliCommon.h"
@@ -34,6 +35,8 @@ bool gShowPhyKpi = false;
 
 extern UInt8 gLogLevel;
 
+#define BUILD_TIME  (__DATE__ " " __TIME__)
+
 // ----------------------------------------------
 KpiCommandParser::KpiCommandParser() {
 
@@ -56,7 +59,16 @@ bool KpiCommandParser::parseAndExecute(Qmss* qmss, int argc, char* argv[])
         for (int i=1; i<argc;) {
             string option(argv[i++]);
 
-            if (option.compare("--debug") == 0) {
+            if (option.compare("-v") == 0) {
+                string version = string(SW_VERSION) + "." + Util::i2s(KPI_VERSION);
+#if (defined TDD) 
+                version += "-TDD";
+#elif (defined FDD)
+                version += "-FDD";
+#endif                 
+                cout << "Software Version: " << endl << "    " << version << " " << BUILD_TIME << endl;
+                exit(0);
+            } else if (option.compare("--debug") == 0) {
                 gLogLevel = 1;
             } else if (option.compare("--all") == 0) {
                 gShowAll = true;

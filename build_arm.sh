@@ -11,6 +11,10 @@ export GTEST_SUPPORT=FALSE
 export SCTP_SUPPORT=FALSE
 export DB_SUPPORT=FALSE
 
+export NEW_QMSS_DRIVER=FALSE
+# export NEW_QMSS_DRIVER=TDD_TRUE
+#export NEW_QMSS_DRIVER=FDD_TRUE
+
 export PROJBASE=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 echo "Current directory: $PROJBASE"
 

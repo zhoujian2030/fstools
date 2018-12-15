@@ -13,6 +13,11 @@ extern bool gShowPhyKpi;
 extern std::string gKpiDirectory;
 extern std::string gTargetImsi;
 
+#define SW_VERSION          "2.0.0"
+
+#define KPI_VERSION         1006
+#define KPI_VERSION_LEN     4
+
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
 #define MAC_RECV_MSG_BUFFER_LENGTH 4096
 

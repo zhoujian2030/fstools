@@ -10,7 +10,11 @@ LIBDIR = lib
 # Libraries
 
 INC += -I$(PROJBASE)/cm/inc
+ifeq ($(NEW_QMSS_DRIVER), FALSE)
 LIBS = $(PROJBASE)/cm/lib/libnetcp.a
+else
+LIBS = $(PROJBASE)/cm/lib/libnetcp_new.a
+endif
 
 # Files and folders
 SRCS := $(wildcard $(SRCDIR)/*.cpp $(SRCDIR)/*.c $(SRCDIR)/*.cc)
