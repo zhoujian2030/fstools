@@ -10,6 +10,7 @@ else
 fi
 
 if [ "$PLATFORM" == "arm" ]; then
-    cp lib/${libname}.a lib/${libname}_arm.a
+    echo "rename lib to" ${libname}_arm.a
+    mv lib/${libname}.a lib/${libname}_arm.a
 fi
 

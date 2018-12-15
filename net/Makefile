@@ -26,6 +26,7 @@ all: $(LIBA)
 
 $(LIBA): buildrepo $(OBJS)
 	$(AR) q $@ $(OBJS)
+	@mkdir -p $(LIBDIR)
 	@mv $(LIBA) $(LIBDIR)
 	@mkdir -p $(INCDIR)
 	@cp $(SRCDIR)/*.h $(INCDIR)

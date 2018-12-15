@@ -32,4 +32,3 @@ else
     #cp clibe/obj/cli-be /mnt/hgfs/c/share/
 fi
 
-
