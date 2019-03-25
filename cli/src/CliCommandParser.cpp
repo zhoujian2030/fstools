@@ -146,6 +146,20 @@ bool CliCommandParser::execute(Qmss* qmss, int argc, char* argv[]) {
                     LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Max UE scheduled yet\n", __func__);
                     return false;
                 }
+            } else if (m_subTgtType == SUB_TGT_MAX_UL_RE_TX) {
+                if ((m_cmdType == SET)) {
+                    msg->msgId = htons(L2_CLI_SET_MAX_UL_RE_TX);
+                    length += sizeof(UInt32);
+                    msg->length = htons(length);
+                    UInt32* maxUlRetx = (UInt32*)msg->msgBody;
+                    int* value = (int*)m_cmdContent;
+                    *maxUlRetx = *value;
+                    cout << "Set Max UL Re TX: " << *value << endl; 
+                } else {
+                    showUsage();
+                    LOG_DBG(CLI_LOGGER_NAME, "[%s], NOT support GET Max UL Re TX yet\n", __func__);
+                    return false;
+                }
             } else if (m_subTgtType == SUB_TGT_TARGET_UE_ID) {
                 if ((m_cmdType == SET)) {
                     msg->msgId = htons(L2_CLI_SET_TARGET_UE);
@@ -245,7 +259,9 @@ bool CliCommandParser::parseParam(std::string option, int index) {
             m_subTgtType = SUB_TGT_MAX_UE_SCHED;
         } else if (option.compare(SUB_TGT_TYPE_TARGET_UE_NAME) == 0) {
             m_subTgtType = SUB_TGT_TARGET_UE_ID;
-        }  else {
+        } else if (option.compare(SUB_TGT_TYPE_MAX_UL_RE_TX) == 0) {
+            m_subTgtType = SUB_TGT_MAX_UL_RE_TX;
+        } else {
             if (m_tgtType == TGT_SIM) {
                 m_numUe = s2i(option);
             } else {
@@ -295,6 +311,10 @@ bool CliCommandParser::parseParam(std::string option, int index) {
             int* maxUeSched = (int*)m_cmdContent;
             *maxUeSched = s2i(option);
             m_isValid = true;
+        } else if (m_subTgtType == SUB_TGT_MAX_UL_RE_TX) {
+            int* maxUlRetx = (int*)m_cmdContent;
+            *maxUlRetx = s2i(option);
+            m_isValid = true;
         } else if (m_subTgtType == SUB_TGT_TARGET_UE_ID) {
             int* targetUeId = (int*)m_cmdContent;
             *targetUeId = s2i(option);
@@ -333,6 +353,7 @@ void CliCommandParser::showUsage() {
     cout << "  cli set l2 rat2type [distributed/localized]" << endl; 
     cout << "  cli set l2 rachthr  [1, 2, 3, ...]" << endl; 
     cout << "  cli set l2 maxuesched  [1, 2, 3, 4]" << endl; 
+    cout << "  cli set l2 maxulretx  [1, 2, 3, 4]" << endl; 
     cout << "  cli set l2 targetue  [0, 1, 2, ..., 254] [1, 2, 3, ...]" << endl; 
     cout << "  cli get kpi [kpi options]" << endl; 
 }

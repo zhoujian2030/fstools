@@ -11,7 +11,7 @@ export GTEST_SUPPORT=FALSE
 export SCTP_SUPPORT=FALSE
 export DB_SUPPORT=FALSE
 
-export NEW_QMSS_DRIVER=FALSE
+# export NEW_QMSS_DRIVER=FALSE
 # export NEW_QMSS_DRIVER=TDD_TRUE
 #export NEW_QMSS_DRIVER=FDD_TRUE
 
@@ -25,10 +25,24 @@ if [[ $COMMAND = "clean" ]]; then
 elif [[ $COMMAND = "install" ]]; then
     make install
 else
-    make
-    cp kpi/obj/kpi /mnt/hgfs/c/share/
-    #cp tst/obj/tst /mnt/hgfs/c/share/
-    cp cli/obj/cli /mnt/hgfs/c/share/
-    #cp clibe/obj/cli-be /mnt/hgfs/c/share/
+    if [[ $COMMAND = "tdd" ]]; then
+        export NEW_QMSS_DRIVER=TDD_TRUE
+        make
+        cp kpi/obj/kpi /mnt/hgfs/c/share/tddkpi
+        cp cli/obj/cli /mnt/hgfs/c/share/tddcli
+    elif [[ $COMMAND = "fdd" ]]; then
+        export NEW_QMSS_DRIVER=FDD_TRUE
+        make
+        cp kpi/obj/kpi /mnt/hgfs/c/share/fddkpi
+        cp cli/obj/cli /mnt/hgfs/c/share/fddcli
+    else
+        export NEW_QMSS_DRIVER=FALSE
+        make
+        cp kpi/obj/kpi /mnt/hgfs/c/share/
+        # cp tst/obj/tst /mnt/hgfs/c/share/
+        cp cli/obj/cli /mnt/hgfs/c/share/
+        #cp clibe/obj/cli-be /mnt/hgfs/c/share/
+    fi
+
 fi
 

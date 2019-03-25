@@ -78,8 +78,13 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
 #ifdef KPI_L3
         m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
 #else
+#if (defined TDD) 
+        m_resultFilename = "/OAM/software/web/web_page/tddkpi.txt";
+#elif (defined FDD)
+        m_resultFilename = "/OAM/software/web/web_page/fddkpi.txt";
+#else 
         m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
-        // m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
+#endif 
 #endif
         m_resultFile = new File(m_resultFilename, FILE_CREATE, FILE_WRITE_ONLY);
         LOG_DBG(KPI_LOGGER_NAME, "[%s], Create file: %s\n", __func__, m_resultFilename.c_str());
