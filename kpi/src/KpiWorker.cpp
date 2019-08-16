@@ -57,7 +57,13 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
         // LOG_DBG(KPI_LOGGER_NAME, "[%s], Current path: %s\n", __func__, currPath);
 #ifndef GSM
         m_filename = gKpiDirectory;
+#if (defined TDD) 
+        m_filename.append("/lte_kpi_tdd");
+#elif (defined FDD)
+        m_filename.append("/lte_kpi_fdd");
+#else
         m_filename.append("/lte_kpi_");
+#endif
 #else
         m_filename.append("/flash/appsys/common/gsm_kpi_");     
 #endif   
