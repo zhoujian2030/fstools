@@ -15,7 +15,7 @@ extern std::string gTargetImsi;
 
 #define SW_VERSION          "2.0.0"
 
-#define KPI_VERSION         1006
+#define KPI_VERSION         1007
 #define KPI_VERSION_LEN     4
 
 #define MAC_SEND_MSG_BUFFER_LENGTH 512
@@ -158,6 +158,21 @@ typedef struct {
     UInt32 harqDtxPUCCH;
     UInt32 dlTB[10];
 #endif
+
+    UInt32 createMacUeReq;
+    UInt32 createMacUeCnf;
+    UInt32 deleteMacUeReq;
+    UInt32 deleteMacUeCnf;
+
+    UInt32 createRlcUeReq;
+    UInt32 createRlcUeCnf;
+    UInt32 deleteRlcUeReq;
+    UInt32 deleteRlcUeCnf;
+
+    UInt32 createPdcpUeReq;
+    UInt32 createPdcpUeCnf;
+    UInt32 deletePdcpUeReq;
+    UInt32 deletePdcpUeCnf;
 #endif
 } LteCounter;
 

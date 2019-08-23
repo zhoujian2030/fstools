@@ -483,7 +483,7 @@ void KpiWorker::displayCounter(void* counter) {
     GSMCounter* accumulateCounter = (GSMCounter*)m_prevKpiArray;
     GSMCounter* deltaCounter = (GSMCounter*)m_deltaKpiArray;
 #endif
-    char dispChar[7168];
+    char dispChar[10240];
     int sumLength = 0;
     int varLength = 0;
     // memset((void*)dispChar, 32, 1000);
@@ -620,6 +620,33 @@ void KpiWorker::displayCounter(void* counter) {
         varLength = sprintf(dispChar + sumLength, "Attach Reject   %10d  %8d\n", accumulateCounter->attachReject, deltaCounter->attachReject);
         sumLength += varLength;
         varLength = sprintf(dispChar + sumLength, "RRC Release     %10d  %8d\n", accumulateCounter->rrcRelease, deltaCounter->rrcRelease);
+        sumLength += varLength;
+        
+        varLength = sprintf(dispChar + sumLength, "\n");
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create MAC UE REQ      %10d  %8d\n", accumulateCounter->createMacUeReq, deltaCounter->createMacUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create MAC UE CNF      %10d  %8d\n", accumulateCounter->createMacUeCnf, deltaCounter->createMacUeCnf);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete MAC UE REQ      %10d  %8d\n", accumulateCounter->deleteMacUeReq, deltaCounter->deleteMacUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete MAC UE CNF      %10d  %8d\n", accumulateCounter->deleteMacUeCnf, deltaCounter->deleteMacUeCnf);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create RLC UE REQ      %10d  %8d\n", accumulateCounter->createRlcUeReq, deltaCounter->createRlcUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create RLC UE CNF      %10d  %8d\n", accumulateCounter->createRlcUeCnf, deltaCounter->createRlcUeCnf);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete RLC UE REQ      %10d  %8d\n", accumulateCounter->deleteRlcUeReq, deltaCounter->deleteRlcUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete RLC UE CNF      %10d  %8d\n", accumulateCounter->deleteRlcUeCnf, deltaCounter->deleteRlcUeCnf);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create PDCP UE REQ     %10d  %8d\n", accumulateCounter->createPdcpUeReq, deltaCounter->createPdcpUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Create PDCP UE CNF     %10d  %8d\n", accumulateCounter->createPdcpUeCnf, deltaCounter->createPdcpUeCnf);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete PDCP UE REQ     %10d  %8d\n", accumulateCounter->deletePdcpUeReq, deltaCounter->deletePdcpUeReq);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Delete PDCP UE CNF     %10d  %8d\n", accumulateCounter->deletePdcpUeCnf, deltaCounter->deletePdcpUeCnf);
         sumLength += varLength;
     }
 
