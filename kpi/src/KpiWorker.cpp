@@ -58,9 +58,9 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
 #ifndef GSM
         m_filename = gKpiDirectory;
 #if (defined TDD) 
-        m_filename.append("/lte_kpi_tdd");
+        m_filename.append("/lte_kpi_tdd_");
 #elif (defined FDD)
-        m_filename.append("/lte_kpi_fdd");
+        m_filename.append("/lte_kpi_fdd_");
 #else
         m_filename.append("/lte_kpi_");
 #endif
@@ -89,7 +89,8 @@ KpiWorker::KpiWorker(std::string workerName, Qmss* qmss, UInt32 msgId)
 #elif (defined FDD)
         m_resultFilename = "/OAM/software/web/web_page/fddkpi.txt";
 #else 
-        m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
+        m_resultFilename = "/OAM/software/web/web_page/kpi.txt";
+        // m_resultFilename = "/OAM/LTE_NODE/web/web_page/kpi.txt";
 #endif 
 #endif
         m_resultFile = new File(m_resultFilename, FILE_CREATE, FILE_WRITE_ONLY);
@@ -648,6 +649,18 @@ void KpiWorker::displayCounter(void* counter) {
         sumLength += varLength;
         varLength = sprintf(dispChar + sumLength, "Delete PDCP UE CNF     %10d  %8d\n", accumulateCounter->deletePdcpUeCnf, deltaCounter->deletePdcpUeCnf);
         sumLength += varLength;
+#if 0
+        varLength = sprintf(dispChar + sumLength, "\n");
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Max TA:             %d\n", accumulateCounter->maxTa);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Min TA:             %d\n", accumulateCounter->minTa);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Average TA(%ds):    %f\n", m_period/1000, accumulateCounter->avgTa*0.01);
+        sumLength += varLength;
+        varLength = sprintf(dispChar + sumLength, "Average SNR(%ds):   %f\n", m_period/1000, accumulateCounter->avgSnr*0.01);
+        sumLength += varLength;
+#endif
     }
 
     // printf("%s\n", dispChar);

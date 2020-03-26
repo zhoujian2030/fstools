@@ -38,9 +38,9 @@ else
     else
         export NEW_QMSS_DRIVER=FALSE
         make
-        cp kpi/obj/kpi /mnt/hgfs/c/share/
+        cp kpi/obj/kpi /mnt/hgfs/c/share/kpi_mqbs
         # cp tst/obj/tst /mnt/hgfs/c/share/
-        cp cli/obj/cli /mnt/hgfs/c/share/
+        cp cli/obj/cli /mnt/hgfs/c/share/cli_mqbs
         #cp clibe/obj/cli-be /mnt/hgfs/c/share/
     fi
 
